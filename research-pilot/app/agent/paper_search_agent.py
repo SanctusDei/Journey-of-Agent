@@ -6,9 +6,10 @@ from dotenv import load_dotenv
 from app.tools.paper_search import search_papers
 from app.tools.paper_rank import rank_papers
 from app.tools.paper_detail import get_paper_detail
-
+from app.agent.state import AgentState
 from rich.console import Console
 from rich.markdown import Markdown
+
 load_dotenv()
 console = Console()
 
@@ -18,17 +19,6 @@ client = AsyncOpenAI(
 )
 
 model = os.environ["OPENAI_MODEL"]
-
-# 工具分发表
-TOOL_REGISTRY = {
-
-    "search_papers": search_papers,
-    "rank_papers": rank_papers,
-    "get_paper_detail": get_paper_detail,
-
-}
-
-
 
 SEARCH_PAPERS_TOOL = {
     "type": "function",
@@ -65,29 +55,19 @@ SEARCH_PAPERS_TOOL = {
 RANK_PAPERS_TOOL = {
     "type": "function",
     "name": "rank_papers",
-    "description": "对提供的论文列表进行按引用量排列, 返回前 top_k 篇。",
+    "description": "对当前会话已保存的搜索结果按引用量排序，返回前 top_k 篇。",
     "parameters": {
         "type" : "object",
         "parameters": {
-            "papers": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "title": {"type": "string"},
-                        "cited_by_count": {"type": "integer"},
-                        "url": {"type": "string"},
-                    },
-                    "required": ["title", "cited_by_count"],
-                },
-            },
             "top_k": {
                 "type": "integer",
                 "minimum": 1,
                 "maximum": 100,
+                "default": 3
             },    
         },
-        "required": ["papers", "top_k"],
+        "required": [],
+        "additionalProperties": False
     },
     "strict": False,
 }
@@ -123,10 +103,36 @@ class PaperSearchAgent:
         self.client = client
         self.model = model
         self.max_steps = max_steps
+        # 新增状态
+        self.state = AgentState()
+        # 工具注册表
+        self.tool_registry = {
+            "search_papers": self.search_and_save,
+            "rank_papers": self.rank_saved_papers,
+            "get_paper_detail": self.detail_and_save,
+        }
 
     async def run(self, query: str) -> str:
 
-        messages = [{"role": "user", "content": query}]
+        # 将State 摘要加入系统消息
+        state_summary = json.dumps(
+            self.state.snapshot(),
+            ensure_ascii=False,
+        )
+
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "你是 ResearchPilot 科研助手。"
+                    "只能依据工具返回的真实论文信息回答。"
+                    "需要检索时调用 search_papers；"
+                    "需要排序时调用 rank_papers。"
+                    f"\n当前会话状态：{state_summary}"
+                ),
+            },
+            {"role": "user", "content": query}
+            ]
 
         # Agent Loop
         for step in range(self.max_steps):
@@ -164,7 +170,7 @@ class PaperSearchAgent:
         """执行工具"""
         try:
 
-            if tool_call.name not in TOOL_REGISTRY:
+            if tool_call.name not in self.tool_registry:
                 raise ValueError(f"未注册的工具: {tool_call.name}")
 
             # json -> python dict
@@ -174,7 +180,7 @@ class PaperSearchAgent:
                 raise ValueError("工具参数必须是 JSON 对象")
 
             # 获取Tool方法
-            tool_func = TOOL_REGISTRY.get(tool_call.name)
+            tool_func = self.tool_registry.get(tool_call.name)
             
             # 兼容同步和异步工具
             result = tool_func(**args)
@@ -207,6 +213,88 @@ class PaperSearchAgent:
             "output": output,
         }
 
+    async def search_and_save(
+        self,
+        keyword: str,
+        start_year: int = 2023,
+        end_year:int = 2026,
+        limit: int = 10,
+    ) -> dict:
+        papers = await search_papers(
+            keyword=keyword,
+            start_year=start_year,
+            end_year=end_year,
+            limit=limit,
+        )
+
+        # 保存完整论文数据到 State
+        self.state.papers = {
+            paper.url: paper for paper in papers
+        }
+
+        self.state.selected_ids = []
+        self.state.last_keyword = keyword
+
+        # 只返回简短结果给模型
+        return {
+            "count": len(papers),
+            "preview": [
+                {
+                    "url": p.url,
+                    "title": p.title,
+                    "year": p.year,
+                    "cited_by_count": p.cited_by_count,
+                }
+                for p in papers[:10]
+            ],
+        }
+    
+    async def detail_and_save(self, paper_id:str) -> dict:
+        # 将短 ID 和完整 URL 统一成相同的缓存键。
+        work_id = paper_id.strip().rstrip("/").split("/")[-1]
+        paper_url = f"https://openalex.org/{work_id}"
+
+        if paper_url in self.state.paper_details:
+            console.print(f"[dim]读取详情缓存：{work_id}[/dim]")
+            return self.state.paper_details[paper_url]
+
+        console.print(f"[dim]请求 OpenAlex 详情：{work_id}[/dim]")
+
+        detail = await get_paper_detail(paper_id)
+
+        self.state.paper_details[paper_url] = detail
+
+        return detail
+
+    def rank_saved_papers(self, top_k: int = 3) -> dict:
+        if not self.state.papers:
+            raise ValueError("没有搜索结果，请先搜索论文")
+
+        if not 1 <= top_k <= 100:
+            raise ValueError("top_k 必须在 1 到 100 之间")
+        
+        ranked = sorted(
+            self.state.papers.values(),
+            key=lambda p: p.cited_by_count,
+            reverse=True
+        )[:top_k]
+
+        self.state.selected_ids = [
+            paper.url for paper in ranked
+        ]
+
+        return {
+            "selected_papers": [
+                {
+                    "url": p.url,
+                    "title": p.title,
+                    "year": p.year,
+                    "cited_by_count":p.cited_by_count,
+                }
+                for p in ranked
+            ]
+        }
+    
 
 if __name__ == "__main__":
 
@@ -228,23 +316,34 @@ if __name__ == "__main__":
         agent = PaperSearchAgent(
             client=client,
             model=model,
-            max_steps=6,
         )
 
-        query = (
-            "请按以下步骤完成任务："
-            "1. 调用 search_papers，搜索 2023—2026 年关于 machine learning 的论文，返回 5 篇。"
-            "2. 调用 rank_papers，按引用量选出其中前 2 篇，保留论文的 url。"
-            "3. 根据选中论文的 url，分别调用 get_paper_detail 获取摘要；"
-            "如果支持，请在同一轮中提出这两个工具调用。"
-            "4. 用中文列出两篇论文的标题、年份、引用量、链接，并分别总结摘要。"
-            "如果没有摘要，请明确说明。"
+    #     query = (
+    #         "请按以下步骤完成任务："
+    #         "1. 调用 search_papers，搜索 2023—2026 年关于 machine learning 的论文，返回 5 篇。"
+    #         "2. 调用 rank_papers，按引用量选出其中前 2 篇，保留论文的 url。"
+    #         "3. 根据选中论文的 url，分别调用 get_paper_detail 获取摘要；"
+    #         "如果支持，请在同一轮中提出这两个工具调用。"
+    #         "4. 用中文列出两篇论文的标题、年份、引用量、链接，并分别总结摘要。"
+    #         "如果没有摘要，请明确说明。"
+    #     )
+
+    #     result = await agent.run(query)
+
+    #     console.print("\n[green]最终回答：[/green]")
+    #     console.print(Markdown(result), markup=False)
+    # asyncio.run(test())
+        answer = await agent.run(
+            "搜索 2024—2026 年机器学习的论文，"
+            "从搜索结果中选出引用量最高的 3 篇。"
         )
+        console.print(Markdown(answer))
+        answer = await agent.run(
+            "刚才选出的第一篇论文是什么？其摘要主要讲了什么？"
+                    
+        )
+        console.print(Markdown(answer))
 
-        result = await agent.run(query)
-
-        console.print("\n[green]最终回答：[/green]")
-        console.print(Markdown(result), markup=False)
     asyncio.run(test())
     pass
 
@@ -395,5 +494,29 @@ Harness 负责执行:
 - Mock 单元测试
 - 多工具注册与扩展
 - Agent 执行日志
+
+"""
+
+
+"""
+Day 4
+
+Q1: State 和 Context 的区别
+
+State:Agent 在程序中维护的状态，可能包含完整论文数据、工具结果、任务进度等。
+Context: 一次模型调用中实际提供给 LLM 的信息，包括系统指令、用户消息、工具调用历史和必要的状态摘要等
+
+Q2: 为什么 rank_papers() 不再需要 papers 参数?
+
+由于共享状态(Shared State), rank_papers 可以访问同一个 State 参数
+
+Q3: default_factory=list 的作用
+
+每次创建一个新的 AgentState 实例, 调用一次 list(), 生成一个新的空列表
+
+Q4: Agent 如何回答'刚才选中的第一篇是什么?'
+
+全流程: 上一轮:rank_papers()选出论文 --> State 保存 Selected_ids --> snapshot() 提取论文信息
+--> 将摘要放进 Context --> LLM 读取Context 并回答
 
 """
