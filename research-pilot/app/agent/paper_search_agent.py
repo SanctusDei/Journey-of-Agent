@@ -1,10 +1,15 @@
 import os
 import json
+import inspect
 from openai import AsyncOpenAI
 from dotenv import load_dotenv
-from ..tools import paper_search
-from rich.console import Console
+from app.tools.paper_search import search_papers
+from app.tools.paper_rank import rank_papers
+from app.tools.paper_detail import get_paper_detail
 
+from rich.console import Console
+from rich.markdown import Markdown
+load_dotenv()
 console = Console()
 
 client = AsyncOpenAI(
@@ -13,6 +18,17 @@ client = AsyncOpenAI(
 )
 
 model = os.environ["OPENAI_MODEL"]
+
+# 工具分发表
+TOOL_REGISTRY = {
+
+    "search_papers": search_papers,
+    "rank_papers": rank_papers,
+    "get_paper_detail": get_paper_detail,
+
+}
+
+
 
 SEARCH_PAPERS_TOOL = {
     "type": "function",
@@ -46,12 +62,60 @@ SEARCH_PAPERS_TOOL = {
     "strict": False
 }
 
-# 工具分发表
-TOOL_REGISTRY = {
-
-    "search_papers": paper_search,
-
+RANK_PAPERS_TOOL = {
+    "type": "function",
+    "name": "rank_papers",
+    "description": "对提供的论文列表进行按引用量排列, 返回前 top_k 篇。",
+    "parameters": {
+        "type" : "object",
+        "parameters": {
+            "papers": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "title": {"type": "string"},
+                        "cited_by_count": {"type": "integer"},
+                        "url": {"type": "string"},
+                    },
+                    "required": ["title", "cited_by_count"],
+                },
+            },
+            "top_k": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100,
+            },    
+        },
+        "required": ["papers", "top_k"],
+    },
+    "strict": False,
 }
+
+PAPER_DETAIL_TOOL = {
+    "type": "function",
+    "name": "get_paper_detail",
+    "description": "通过 OpeAlex Work ID 获取论文摘要和详细元数据。",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "paper_id": {
+                "type":"string",
+                "description": "OpenAlex Work ID，例如 W123456789。",
+            },
+        },
+        "required": ["paper_id"],
+        "additionalProperties": False,
+    },
+    "strict": False
+}
+
+TOOLS = [
+    SEARCH_PAPERS_TOOL,
+    RANK_PAPERS_TOOL,
+    PAPER_DETAIL_TOOL,
+]
+
 
 
 class PaperSearchAgent:
@@ -70,7 +134,7 @@ class PaperSearchAgent:
 
             # 1. 询问模型
             responses = await self.client.responses.create(
-                model=self.model, input=messages, tools=[SEARCH_PAPERS_TOOL]
+                model=self.model, input=messages, tools=TOOLS
             )
 
             # 2. 保存模型输出
@@ -97,24 +161,39 @@ class PaperSearchAgent:
         return f"达到最大执行轮数 {self.max_steps}，Agent 停止运行"
     
     async def _execute_tool(self, tool_call) -> dict:
+        """执行工具"""
         try:
+
             if tool_call.name not in TOOL_REGISTRY:
                 raise ValueError(f"未注册的工具: {tool_call.name}")
 
+            # json -> python dict
             args = json.loads(tool_call.arguments)
 
             if not isinstance(args, dict):
                 raise ValueError("工具参数必须是 JSON 对象")
 
-            tool_func = TOOL_REGISTRY[tool_call.name]
-            result = await tool_func(**args)
+            # 获取Tool方法
+            tool_func = TOOL_REGISTRY.get(tool_call.name)
+            
+            # 兼容同步和异步工具
+            result = tool_func(**args)
 
-            result_data = [
-                paper.model_dump(mode="json")
-                for paper in result
-            ]
+            if inspect.isawaitable(result):
+                result = await result
 
-            output = json.dumps(result_data, ensure_ascii=False)
+            # Pydantic 模型与普通dict 统一为 JSON
+            # Pydantic & dict -> Json 兼容的 Python dict
+
+            if isinstance(result, list):
+                result = [
+                    item.model_dump(mode="json")
+                    if hasattr(item, "model_dump") 
+                    else item
+                    for item in result
+                ]
+            # 将 result list[dict] -> json str 
+            output = json.dumps(result, ensure_ascii=False)
 
         except (json.JSONDecodeError, ValueError, TypeError, KeyError) as exc:
             output = json.dumps(
@@ -127,6 +206,49 @@ class PaperSearchAgent:
             "call_id": tool_call.call_id,
             "output": output,
         }
+
+
+if __name__ == "__main__":
+
+    # def sync_func():
+    #     return [1, 2, 3]
+
+    # async def async_func():
+    #     return [1, 2, 3]
+
+    # a = sync_func()
+    # b = async_func()
+
+    # console.print(inspect.isawaitable(a))
+    # console.print(inspect.isawaitable(b))
+
+    import asyncio
+
+    async def test():
+        agent = PaperSearchAgent(
+            client=client,
+            model=model,
+            max_steps=6,
+        )
+
+        query = (
+            "请按以下步骤完成任务："
+            "1. 调用 search_papers，搜索 2023—2026 年关于 machine learning 的论文，返回 5 篇。"
+            "2. 调用 rank_papers，按引用量选出其中前 2 篇，保留论文的 url。"
+            "3. 根据选中论文的 url，分别调用 get_paper_detail 获取摘要；"
+            "如果支持，请在同一轮中提出这两个工具调用。"
+            "4. 用中文列出两篇论文的标题、年份、引用量、链接，并分别总结摘要。"
+            "如果没有摘要，请明确说明。"
+        )
+
+        result = await agent.run(query)
+
+        console.print("\n[green]最终回答：[/green]")
+        console.print(Markdown(result), markup=False)
+    asyncio.run(test())
+    pass
+
+
 
 """
 1. 什么是 Function Calling? 模型会直接执行 Python 函数吗？
