@@ -7,6 +7,8 @@ from app.tools.paper_search import search_papers
 from app.tools.paper_rank import rank_papers
 from app.tools.paper_detail import get_paper_detail
 from app.agent.state import AgentState
+from app.rag.retriever import retrieve_papers_semantic
+from sentence_transformers import SentenceTransformer
 from rich.console import Console
 from rich.markdown import Markdown
 
@@ -58,7 +60,7 @@ RANK_PAPERS_TOOL = {
     "description": "对当前会话已保存的搜索结果按引用量排序，返回前 top_k 篇。",
     "parameters": {
         "type" : "object",
-        "parameters": {
+        "properties": {
             "top_k": {
                 "type": "integer",
                 "minimum": 1,
@@ -90,10 +92,32 @@ PAPER_DETAIL_TOOL = {
     "strict": False
 }
 
+RETRIEVE_PAPERS_TOOL = {
+    "type": "function",
+    "name": "retrieve_saved_papers",
+    "description": (
+        "按语义检索当前搜索结果中已缓存的非空摘要。"
+        "query 请使用英文。返回相关候选及覆盖数量；"
+        "不会获取缺失详情，结果不代表全部符合条件的论文。"
+    ),
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "query": {"type": "string"},
+            "top_k": {"type": "integer", "minimum": 1, "maximum": 10},
+        },
+        "required": ["query"],
+        "additionalProperties": False,
+    },
+    "strict": False,
+}
+
+
 TOOLS = [
     SEARCH_PAPERS_TOOL,
     RANK_PAPERS_TOOL,
     PAPER_DETAIL_TOOL,
+    RETRIEVE_PAPERS_TOOL
 ]
 
 
@@ -110,7 +134,13 @@ class PaperSearchAgent:
             "search_papers": self.search_and_save,
             "rank_papers": self.rank_saved_papers,
             "get_paper_detail": self.detail_and_save,
+            "retrieve_saved_papers": self.retrieve_saved_papers,
         }
+        # 嵌入层
+        self.embedding_model = SentenceTransformer(
+            "sentence-transformers/all-MiniLM-L6-v2",
+            device="cpu",
+        )
 
     async def run(self, query: str) -> str:
 
@@ -129,6 +159,13 @@ class PaperSearchAgent:
                     "需要检索时调用 search_papers；"
                     "需要排序时调用 rank_papers。"
                     f"\n当前会话状态：{state_summary}"
+                    "需要从当前候选论文的缓存摘要中查找相关内容时，"
+                    "调用 retrieve_saved_papers，检索词使用英文。"
+                    "需要获取缺失摘要时，调用 get_paper_detail。"
+                    "回答时说明可检索摘要数和候选论文数，"
+                    "区分检索相关性与论文内容中的明确证据。"
+                    "区分候选论文数、参与检索的摘要数和实际返回数；"
+                    "不要把 Top-K 返回数量称为检索覆盖数量。"
                 ),
             },
             {"role": "user", "content": query}
@@ -294,6 +331,34 @@ class PaperSearchAgent:
                 for p in ranked
             ]
         }
+
+    def retrieve_saved_papers(self, query: str, top_k: int = 3) -> dict:
+        if not query.strip():
+            raise ValueError("query 不能为空")
+        if not 1 <= top_k <= 10:
+            raise ValueError("top_k 必须在1到10之间")
+
+        searchable = {
+            paper_id: detail
+            for paper_id, detail in self.state.paper_details.items()
+            if paper_id in self.state.papers
+            and isinstance(detail.get("abstract"), str)
+            and detail["abstract"].strip()
+        }
+
+        results = retrieve_papers_semantic(
+            paper_details=searchable,
+            query=query,
+            model=self.embedding_model,
+            top_k=top_k,
+        )
+
+        return{
+            "candidate_count": len(self.state.papers),
+            "searchable_count": len(searchable),
+            "returned_count": len(results),
+            "results": results,
+        }
     
 
 if __name__ == "__main__":
@@ -333,14 +398,19 @@ if __name__ == "__main__":
     #     console.print("\n[green]最终回答：[/green]")
     #     console.print(Markdown(result), markup=False)
     # asyncio.run(test())
-        answer = await agent.run(
-            "搜索 2024—2026 年机器学习的论文，"
-            "从搜索结果中选出引用量最高的 3 篇。"
+        papers = await agent.search_and_save(
+            keyword="radar gesture recognition",
+            limit=3,
         )
-        console.print(Markdown(answer))
+
+        for paper_id in agent.state.papers:
+            await agent.detail_and_save(paper_id)
+
         answer = await agent.run(
-            "刚才选出的第一篇论文是什么？其摘要主要讲了什么？"
-                    
+            "请先调用 retrieve_saved_papers，"
+            "使用 radar gesture recognition 作为 query，top_k=2。"
+            "根据返回摘要，用中文概括相关研究的方法，附上论文链接，"
+            "并说明实际检索覆盖了多少篇候选论文。"
         )
         console.print(Markdown(answer))
 

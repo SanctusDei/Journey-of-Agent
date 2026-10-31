@@ -191,7 +191,6 @@ import pytest
 
 from app.agent.paper_search_agent import (
     PaperSearchAgent,
-    TOOL_REGISTRY
 )
 from app.models.schemas import Paper
 
@@ -248,3 +247,4 @@ async def test_agent_direct_answer():
     result = await agent.run("你好")
     assert result == "你好，我是 ResearchPilot"
     assert mock_client.responses.create.await_count == 1
+    

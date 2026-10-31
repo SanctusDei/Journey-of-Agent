@@ -30,9 +30,9 @@ class AgentState:
                 "cited_by_count": paper.cited_by_count,
             }
 
-            # 有缓存时才加入摘要；空字符串表示已查询但没有摘要。
-            if paper_id in self.paper_details:
-                item["abstract"] = self.paper_details[paper_id].get("abstract", "")
+            
+            abstract = self.paper_details.get(paper_id, {}).get("abstract")
+            item["has_abstract"] = isinstance(abstract, str) and bool(abstract.strip())
 
             selected_papers.append(item)
         

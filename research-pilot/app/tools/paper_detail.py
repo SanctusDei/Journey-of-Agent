@@ -279,5 +279,3 @@ if __name__ == "__main__":
     # console.print(paper_id.rstrip("/").split("/"))
     # console.print(paper_id.rstrip("/").split("/")[-1])
     asyncio.run(main())
-
-    pass
