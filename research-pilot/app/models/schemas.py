@@ -9,3 +9,7 @@ class Paper(BaseModel):
     cited_by_count: int = Field(default=0, ge=0)
     # 自动把 API 返回的 id 映射为 url
     url: str = Field(validation_alias="id")
+
+
+class TaskPlan(BaseModel):
+    steps: list[str] = Field(min_length=1, max_length=6)

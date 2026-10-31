@@ -216,6 +216,8 @@ class PaperSearchAgent:
             if not isinstance(args, dict):
                 raise ValueError("工具参数必须是 JSON 对象")
 
+            console.print(f"[dim]模型选择工具：{tool_call.name}，参数：{args}[/dim]")
+
             # 获取Tool方法
             tool_func = self.tool_registry.get(tool_call.name)
             

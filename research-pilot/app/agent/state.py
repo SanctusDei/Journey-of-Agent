@@ -12,6 +12,9 @@ class AgentState:
     paper_details: dict[str, dict] = field(default_factory=dict)
 
     last_keyword: str = ""
+    # 计划
+    plan : list[str] = field(default_factory=list)
+    target_papers: int = 0
 
     def snapshot(self) -> dict:
         
@@ -40,6 +43,7 @@ class AgentState:
             
             "paper_count": len(self.papers),
             "last_keyword": self.last_keyword,
-            "selected_papers": selected_papers
-
+            "selected_papers": selected_papers,
+            "plan": self.plan,
+            "target_papers": self.target_papers,
         }
