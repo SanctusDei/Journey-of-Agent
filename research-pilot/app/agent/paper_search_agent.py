@@ -144,6 +144,7 @@ class PaperSearchAgent:
         )
 
     async def run(self, query: str, target_papers:int = 0) -> str:
+        
         if not 0 <= target_papers <= 5:
             raise ValueError("target_papers 必须在0到5之间")
 
@@ -151,7 +152,7 @@ class PaperSearchAgent:
         self.state.plan = []
 
         if target_papers > 0:
-
+            # 生成计划
             self.state.plan = await self.create_plan(query)
             self.state.selected_ids = []
 
@@ -183,6 +184,9 @@ class PaperSearchAgent:
                     "不要把 Top-K 返回数量称为检索覆盖数量。"
                     "按当前状态中的plan推进任务，并依据工具结果检查进度。"
                     "已查询但没有摘要的论文不要反复查询；证据不足时明确说明。"
+                    "search_papers 会替换当前候选集合，不会合并历次搜索结果。"
+                    "没有缓存摘要不代表论文没有摘要；必须区分尚未查询和已查询但摘要为空。"
+                    "数量、标题和链接以状态及工具结果为准，不要编造合并去重过程。"
                 ),
             },
             {"role": "user", "content": query}
@@ -310,6 +314,7 @@ class PaperSearchAgent:
 
         # 只返回简短结果给模型
         return {
+            "update_mode": "replace",
             "count": len(papers),
             "preview": [
                 {
@@ -362,9 +367,13 @@ class PaperSearchAgent:
         return parsed.steps
 
     def check_progress(self) -> dict:
+        # 已经选中的论文ID
         ids = self.state.selected_ids
+        # 需要比较的论文数量
         target = self.state.target_papers
+        # 已经有详细查询记录的论文数量(不一定获取到了摘要)
         queried = 0
+        # 已经获取
         abstracts = 0
 
         for paper_id in ids:
@@ -375,6 +384,7 @@ class PaperSearchAgent:
                 paper_id, {}
             ).get("abstract")
 
+            # 检查摘要是否有效
             if isinstance(abstract, str) and abstract.strip():
                 abstracts += 1
 
@@ -439,8 +449,21 @@ class PaperSearchAgent:
             model=self.embedding_model,
             top_k=top_k,
         )
+        # 将摘要检索结果与已有论文元数据关联
+        for item in results:
+            paper = self.state.papers[item["paper_id"]]
 
-        return{
+            item.update({
+                "title": paper.title,
+                "year": paper.year,
+                "url": paper.url,
+                "cited_by_count": paper.cited_by_count,
+            })
+
+
+            return {
+            "query": query,
+            "requested_top_k": top_k,
             "candidate_count": len(self.state.papers),
             "searchable_count": len(searchable),
             "returned_count": len(results),
@@ -449,60 +472,42 @@ class PaperSearchAgent:
     
 
 if __name__ == "__main__":
-
-    # def sync_func():
-    #     return [1, 2, 3]
-
-    # async def async_func():
-    #     return [1, 2, 3]
-
-    # a = sync_func()
-    # b = async_func()
-
-    # console.print(inspect.isawaitable(a))
-    # console.print(inspect.isawaitable(b))
-
+    
     import asyncio
 
-    async def test():
+    async def main():
+        # 整个交互过程只创建一次Agent
         agent = PaperSearchAgent(
             client=client,
             model=model,
+            max_steps=8,
         )
 
-    #     query = (
-    #         "请按以下步骤完成任务："
-    #         "1. 调用 search_papers，搜索 2023—2026 年关于 machine learning 的论文，返回 5 篇。"
-    #         "2. 调用 rank_papers，按引用量选出其中前 2 篇，保留论文的 url。"
-    #         "3. 根据选中论文的 url，分别调用 get_paper_detail 获取摘要；"
-    #         "如果支持，请在同一轮中提出这两个工具调用。"
-    #         "4. 用中文列出两篇论文的标题、年份、引用量、链接，并分别总结摘要。"
-    #         "如果没有摘要，请明确说明。"
-    #     )
 
-    #     result = await agent.run(query)
-
-    #     console.print("\n[green]最终回答：[/green]")
-    #     console.print(Markdown(result), markup=False)
-    # asyncio.run(test())
-        papers = await agent.search_and_save(
-            keyword="radar gesture recognition",
-            limit=3,
+        first_answer = await agent.run(
+            query=(
+                "搜索2023—2026年 radar gesture recognition 论文，最多5篇。"
+                "在本次候选中按引用量选出前2篇，获取它们的摘要。"
+                "根据摘要比较识别方法，附标题和链接。"
+                "没有摘要时明确说明，不要推测论文方法。"
+            ),
+            target_papers=2,
         )
+        console.print(Markdown(first_answer))
 
-        for paper_id in agent.state.papers:
-            await agent.detail_and_save(paper_id)
+        while True:
+            query = input("\n继续提问，输入 exit 结束：").strip()
 
-        answer = await agent.run(
-            "请先调用 retrieve_saved_papers，"
-            "使用 radar gesture recognition 作为 query，top_k=2。"
-            "根据返回摘要，用中文概括相关研究的方法，附上论文链接，"
-            "并说明实际检索覆盖了多少篇候选论文。"
-        )
-        console.print(Markdown(answer))
+            if query.lower() == "exit":
+                break
 
-    asyncio.run(test())
-    pass
+            if not query:
+                continue
+            console.print(f"本次收到的问题：{query!r}")
+            answer = await agent.run(query)
+            console.print(Markdown(answer))
+
+    asyncio.run(main())
 
 
 
