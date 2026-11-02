@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from app.tools.paper_search import search_papers
 from app.tools.paper_rank import rank_papers
 from app.tools.paper_detail import get_paper_detail
+from app.models.schemas import TaskPlan
 from app.agent.state import AgentState
 from app.rag.retriever import retrieve_papers_semantic
 from sentence_transformers import SentenceTransformer
@@ -142,7 +143,21 @@ class PaperSearchAgent:
             device="cpu",
         )
 
-    async def run(self, query: str) -> str:
+    async def run(self, query: str, target_papers:int = 0) -> str:
+        if not 0 <= target_papers <= 5:
+            raise ValueError("target_papers 必须在0到5之间")
+
+        self.state.target_papers = target_papers
+        self.state.plan = []
+
+        if target_papers > 0:
+
+            self.state.plan = await self.create_plan(query)
+            self.state.selected_ids = []
+
+            console.print("[cyan]本次任务计划[/cyan]")
+            for i, item in enumerate(self.state.plan, start=1):
+                console.print(f"{i}. {item}") 
 
         # 将State 摘要加入系统消息
         state_summary = json.dumps(
@@ -166,6 +181,8 @@ class PaperSearchAgent:
                     "区分检索相关性与论文内容中的明确证据。"
                     "区分候选论文数、参与检索的摘要数和实际返回数；"
                     "不要把 Top-K 返回数量称为检索覆盖数量。"
+                    "按当前状态中的plan推进任务，并依据工具结果检查进度。"
+                    "已查询但没有摘要的论文不要反复查询；证据不足时明确说明。"
                 ),
             },
             {"role": "user", "content": query}
@@ -192,14 +209,31 @@ class PaperSearchAgent:
 
             # 4. 如果模型不再调用工具，说明任务完成
             if not tool_calls:
-                return responses.output_text or ""
+                answer =  responses.output_text or ""
 
+                if self.state.target_papers > 0:
+                    progress = self.check_progress()
+                    if progress["status"] != "ready":
+                        return f"摘要证据尚未齐备：{progress}\n\n{answer}"
+
+                return answer
+            
             # 5. 执行工具
             for tool_call in tool_calls:
                 tool_output = await self._execute_tool(tool_call)
 
                 # 6. 将工具结果加入消息历史
                 messages.append(tool_output)
+
+            if self.state.target_papers > 0:
+                progress = self.check_progress()
+                console.print(f"摘要准备进度: {progress}")
+
+                messages.append({
+                    "role": "system",
+                    "content": "Python核对的最新摘要准备进度："
+                    + json.dumps(progress, ensure_ascii=False),
+                })
 
         return f"达到最大执行轮数 {self.max_steps}，Agent 停止运行"
     
@@ -304,6 +338,57 @@ class PaperSearchAgent:
         self.state.paper_details[paper_url] = detail
 
         return detail
+
+    async def create_plan(self, query:str) ->list[str]:
+        """生成计划"""
+        response = await self.client.responses.create(
+            model=self.model,
+            tools=[],
+            input=[
+                {
+                    "role":"system",
+                    "content":(
+                        "将科研任务拆成最多6个简短、按顺序执行的待办步骤。"
+                        "可用能力：搜索论文、引用量排序、获取摘要、摘要检索、比较总结。"
+                        "只生成计划，不编造论文ID和研究结果。"
+                        '仅输出JSON：{"steps": ["步骤1", "步骤2"]}。'
+                        "不要使用Markdown代码块。"
+                    ),
+                },
+                {"role": "user", "content": query}
+            ],
+        )
+        parsed = TaskPlan.model_validate_json(response.output_text)
+        return parsed.steps
+
+    def check_progress(self) -> dict:
+        ids = self.state.selected_ids
+        target = self.state.target_papers
+        queried = 0
+        abstracts = 0
+
+        for paper_id in ids:
+            if paper_id in self.state.paper_details:
+                queried += 1
+
+            abstract = self.state.paper_details.get(
+                paper_id, {}
+            ).get("abstract")
+
+            if isinstance(abstract, str) and abstract.strip():
+                abstracts += 1
+
+        status = "pending"
+        if target > 0 and len(ids) == target and queried == target:
+            status = "ready" if abstracts == target else "blocked"
+
+        return {
+            "target": target,
+            "selected": len(ids),
+            "queried": queried,
+            "abstracts": abstracts,
+            "status": status,
+        }
 
     def rank_saved_papers(self, top_k: int = 3) -> dict:
         if not self.state.papers:
