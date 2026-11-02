@@ -187,8 +187,11 @@ class PaperSearchAgent:
                     "search_papers 会替换当前候选集合，不会合并历次搜索结果。"
                     "没有缓存摘要不代表论文没有摘要；必须区分尚未查询和已查询但摘要为空。"
                     "数量、标题和链接以状态及工具结果为准，不要编造合并去重过程。"
+                    "历史对话用于理解指代和整理已有回答。"
+                    "新增或核实论文事实时，以最新状态和工具结果为准。"
                 ),
             },
+            *self.state.chat_history,
             {"role": "user", "content": query}
             ]
 
@@ -218,8 +221,12 @@ class PaperSearchAgent:
                 if self.state.target_papers > 0:
                     progress = self.check_progress()
                     if progress["status"] != "ready":
-                        return f"摘要证据尚未齐备：{progress}\n\n{answer}"
+                        answer =  (
+                            f"摘要证据尚未齐备：{progress}\n\n"
+                            f"{answer}"
+                        )
 
+                self.state.remember_turn(query, answer)
                 return answer
             
             # 5. 执行工具
@@ -235,11 +242,12 @@ class PaperSearchAgent:
 
                 messages.append({
                     "role": "system",
-                    "content": "Python核对的最新摘要准备进度："
+                    "content": "Python核对的最新摘要准备进度:"
                     + json.dumps(progress, ensure_ascii=False),
                 })
-
-        return f"达到最大执行轮数 {self.max_steps}，Agent 停止运行"
+ 
+        answer = f"达到最大执行轮数 {self.max_steps},Agent 停止运行"
+        self.state.remember_turn(query, answer)
     
     async def _execute_tool(self, tool_call) -> dict:
         """执行工具"""
@@ -497,6 +505,7 @@ if __name__ == "__main__":
             f"已恢复 {len(agent.state.papers)} 篇候选论文,"
             f"{len(agent.state.paper_details)} 条详情缓存"
         )
+
         try:
             # 没有候选论文时，执行首次科研任务
             if not agent.state.papers:
@@ -524,6 +533,7 @@ if __name__ == "__main__":
                 answer = await agent.run(query)
                 agent.state.save(state_path)
                 console.print(Markdown(answer))
+
         finally:
             agent.state.save(state_path)
     asyncio.run(main())
@@ -719,5 +729,25 @@ Q4. 恢复文件后，模型是否自动知道全部摘要？
 
 Q5. 今天的持久化能否从上次中断的工具步骤继续执行?
 不能。当前保存的是论文数据，执行计划、循环位置和完整对话历史没有恢复。
+
+"""
+
+"""
+Day 8
+
+Q1. 论文缓存和联通记录分别解决什么问题?
+论文缓存保存研究材料；聊天记录帮助理解“刚才”“上一条”等连续追问。
+
+Q2. 保存了 chat_history, 模型就能直接读取吗?
+答：不能，还需要将它加入本次请求的 messages .
+
+Q3. 为什么记录最终回答,而不是只记录用户问题
+答：“把刚才的回答改成表格”需要知道助手之前具体回答了什么。
+
+Q4. 为什么只保留最近三轮?
+先用简单方式限制历史长度。问答很长时，仍然可能占用较多 Token，之后再学习按长度裁剪和摘要压缩。
+
+Q5. 历史回答能否直接当成新的论文证据?
+不能。历史回答可能存在错误；新增或核实事实时，应依据最新状态和工具返回的论文信息。
 
 """

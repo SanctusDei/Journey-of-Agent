@@ -17,6 +17,9 @@ class AgentState:
     # 计划
     plan : list[str] = field(default_factory=list)
     target_papers: int = 0
+    
+    # 聊天历史
+    chat_history: list[dict[str, str]] = field(default_factory=list)
 
     def snapshot(self) -> dict:
         
@@ -66,6 +69,7 @@ class AgentState:
             "selected_ids": self.selected_ids,
             "paper_details": self.paper_details,
             "last_keyword": self.last_keyword,
+            "chat_history":self.chat_history,
         }
 
         file_path = Path(path)
@@ -95,6 +99,16 @@ class AgentState:
         return cls(
             papers={paper.url: paper for paper in papers},
             selected_ids=data.get("selected_ids", []),
-            paper_details=data.get("paper_details", []),
+            paper_details=data.get("paper_details", {}),
             last_keyword=data.get("last_keyword", ""),
+            chat_history=data.get("chat_history", [])[-6:],
         )
+
+    def remember_turn(self, query: str, answer: str) -> None:
+        self.chat_history.extend([
+            {"role": "user", "content": query},
+            {"role": "assistant", "content": answer},
+        ])
+
+        # 每轮两条消息，只保留最近三轮
+        self.chat_history = self.chat_history[-6:]

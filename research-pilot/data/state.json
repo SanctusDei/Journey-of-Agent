@@ -50,5 +50,31 @@
       "abstract": "Gesture recognition of millimeter-wave radar plays an important role in human-computer interaction within the current Internet of Everything context. Based on the signal pre-processing algorithm of MUSIC, this paper proposes a gesture recognition algorithm using error-correction code(ECC) module. Firstly, the gesture signals collected by millimeter-wave radar are processed into three sets of images of azimuth, elevation and depth by using signal processing algorithms such as MUSIC; then they are sent to the feature extraction network and output the discriminant code; finally, the discriminant codes are sent to ECC module to output the final verdict result. The addition of error correction code makes the whole decision mechanism more logical and robust, and it may also significantly enhance the real-time performance of gesture detection since it avoids the complicated network."
     }
   },
-  "last_keyword": "radar gesture recognition"
+  "last_keyword": "radar gesture recognition",
+  "chat_history": [
+    {
+      "role": "user",
+      "content": "请根据当前选中论文的缓存摘要，比较它们的识别方法，附论文标题和链接。"
+    },
+    {
+      "role": "assistant",
+      "content": "## 检索与证据范围\n\n- 当前候选论文：**5 篇**\n- 当前选中论文：**2 篇**（两篇均有缓存摘要）\n- 参与本次摘要检索的摘要数：**2 篇**\n- 实际返回并用于比较的论文：**2 篇**\n\n说明：检索得分只表示摘要与查询的相关程度，**不代表论文质量或识别性能**；下文的比较均依据缓存摘要中明确写出的内容。两篇论文属于不同技术路线，摘要未给出可直接对比的准确率、时延或能耗数值。\n\n---\n\n## 两篇论文的识别方法比较\n\n| 比较维度 | 论文 1 | 论文 2 |\n|---|---|---|\n| 论文 | **Federated Learning for Radar Gesture Recognition Based on Spike Timing-Dependent Plasticity**（2024） | **Millimeter Wave Radar Gesture Recognition Based on ECC**（2024） |\n| 链接 | [https://openalex.org/W4390806602](https://openalex.org/W4390806602) | [https://openalex.org/W4402259598](https://openalex.org/W4402259598) |\n| 核心方案 | 联邦学习框架 + 脉冲神经网络（SNN） | MUSIC 信号预处理 + 特征提取网络 + 纠错码（ECC）模块 |\n| 雷达信号处理方式 | 摘要未详细说明具体信号表征；重点在分布式训练雷达数据 | 用 MUSIC 等算法把毫米波雷达信号处理为**方位角、俯仰角、深度三组图像** |\n| 模型训练/识别机制 | 使用具有生物可解释性的 **STDP** 训练 SNN；客户端之间只交换模型参数，不传输原始数据 | 图像送入特征提取网络，输出**判别码**，再交由 ECC 模块给出最终判定 |\n| 隐私与资源约束 | 明确针对隐私泄露和边缘节点计算资源受限问题；采用联邦学习、SNN 和权重剪枝降低能耗与通信成本 | 摘要未提及隐私保护或联邦学习；强调 ECC 使决策机制更合理、更鲁棒，并可能通过避免复杂网络提升实时性 |\n| 鲁棒性/泛化关注点 | 考察不同参与设备，以及联邦学习下 **IID 与非 IID** 数据分布中的识别能力 | 通过 ECC 增强最终判决的鲁棒性 |\n| 效率关注点 | STDP 相比传统 BP 和 BPTT 更节能；权重剪枝降低通信开销 | 通过简化网络和 ECC 判决模块提升实时性 |\n| 实验数据 | **8 GHz 雷达手势数据集**和 **Google Soli 数据集** | 摘要未给出具体数据集名称或性能指标 |\n\n---\n\n## 方法层面的主要差异\n\n1. **系统架构不同**  \n   论文 1 是**分布式联邦学习 + SNN**，重点是隐私保护和边缘端资源约束；论文 2 是**单机式的信号处理—特征提取—ECC 判决流水线**，重点是判别码的纠错与实时判决。\n\n2. **信号表征不同**  \n   论文 2 明确使用 MUSIC 生成方位、俯仰和深度图像；论文 1 的摘要没有展开雷达数据的具体表征方式，只说明在雷达手势数据上训练和评估。\n\n3. **效率优化路径不同**  \n   论文 1 通过 **SNN、STDP 和权重剪枝**降低能耗及通信成本；论文 2 通过**避免复杂网络并引入 ECC** 追求更好的实时性和判决鲁棒性。\n\n4. **证据边界**  \n   两篇摘要都没有报告可横向比较的识别准确率、推理延迟或能耗数值。因此，只能比较方法设计取向，**不能据此判断哪一篇识别效果更好**。此外，本次仅检索了 2 篇缓存摘要；候选集合中其余论文未被纳入这次摘要比较。"
+    },
+    {
+      "role": "user",
+      "content": "把刚才的比较改成表格，保留论文标题、核心方法和链接，不增加新的事实。"
+    },
+    {
+      "role": "assistant",
+      "content": "## 比较表格\n\n说明：范围与上一条回答一致——当前候选论文 **5 篇**，选中论文 **2 篇**，两篇均有缓存摘要；下表仅重排此前已陈述的内容。\n\n| 论文标题 | 核心方法 | 链接 |\n|---|---|---|\n| Federated Learning for Radar Gesture Recognition Based on Spike Timing-Dependent Plasticity（2024） | 联邦学习框架结合脉冲神经网络（SNN），采用 STDP 进行训练；客户端之间不传输原始数据，只交换模型参数；再用权重剪枝降低通信开销与能耗 | [https://openalex.org/W4390806602](https://openalex.org/W4390806602) |\n| Millimeter Wave Radar Gesture Recognition Based on ECC（2024） | 用 MUSIC 等算法把毫米波雷达信号处理为方位角、俯仰角、深度三组图像；再经特征提取网络输出判别码，由 ECC 模块完成最终判定 | [https://openalex.org/W4402259598](https://openalex.org/W4402259598) |\n\n### 沿用此前已陈述的差异点\n\n| 差异维度 | 论文 1 | 论文 2 |\n|---|---|---|\n| 系统架构 | 分布式联邦学习 + SNN | 信号处理、特征提取、ECC 判决构成的流水线 |\n| 信号表征 | 摘要未展开 | MUSIC 生成方位角、俯仰角、深度三组图像 |\n| 效率优化路径 | SNN、STDP、权重剪枝 | 避免复杂网络并引入 ECC |\n\n证据边界：两篇摘要均未报告可横向比较的识别准确率、时延或能耗数值，因此不能据此判断识别效果优劣。"
+    },
+    {
+      "role": "user",
+      "content": "把上一条表格中的核心方法各压缩成一句话。"
+    },
+    {
+      "role": "assistant",
+      "content": "## 比较表格（核心方法压缩为一句）\n\n范围不变：当前会话候选论文 **5** 篇，选中并参与比较的论文 **2** 篇；这两篇论文均有缓存摘要，本次比较仅依据这两篇缓存摘要，未新增事实。\n\n| 论文标题 | 核心方法（一句话） | 链接 |\n|---|---|---|\n| Federated Learning for Radar Gesture Recognition Based on Spike Timing-Dependent Plasticity（2024） | 在联邦学习框架下用 STDP 训练脉冲神经网络（SNN），客户端只交换模型参数而不传输原始数据，并借助权重剪枝降低通信与能耗。 | [https://openalex.org/W4390806602](https://openalex.org/W4390806602) |\n| Millimeter Wave Radar Gesture Recognition Based on ECC（2024） | 用 MUSIC 等算法把毫米波雷达信号处理为方位角、俯仰角、深度三组图像，经特征提取网络输出判别码后由 ECC 模块给出最终判定。 | [https://openalex.org/W4402259598](https://openalex.org/W4402259598) |"
+    }
+  ]
 }
