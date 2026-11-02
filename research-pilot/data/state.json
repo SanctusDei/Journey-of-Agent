@@ -1,0 +1,54 @@
+{
+  "papers": [
+    {
+      "id": "https://openalex.org/W4407786542",
+      "title": "A Light Residual CNN for Radar Gesture Recognition",
+      "publication_year": 2024,
+      "doi": "https://doi.org/10.1109/apcap62011.2024.10881168",
+      "cited_by_count": 0
+    },
+    {
+      "id": "https://openalex.org/W4416343137",
+      "title": "Robust Radar Gesture Recognition on the Edge",
+      "publication_year": 2025,
+      "doi": "https://doi.org/10.23919/eurad65285.2025.11234274",
+      "cited_by_count": 0
+    },
+    {
+      "id": "https://openalex.org/W4402259598",
+      "title": "Millimeter Wave Radar Gesture Recognition Based on ECC",
+      "publication_year": 2024,
+      "doi": "https://doi.org/10.1109/igarss53475.2024.10642368",
+      "cited_by_count": 1
+    },
+    {
+      "id": "https://openalex.org/W7214564124",
+      "title": "FMCW millimeter-wave radar gesture recognition for smart buildings",
+      "publication_year": 2026,
+      "doi": "https://doi.org/10.1016/j.enbuild.2026.118315",
+      "cited_by_count": 0
+    },
+    {
+      "id": "https://openalex.org/W4390806602",
+      "title": "Federated Learning for Radar Gesture Recognition Based on Spike Timing-Dependent Plasticity",
+      "publication_year": 2024,
+      "doi": "https://doi.org/10.1109/taes.2024.3353148",
+      "cited_by_count": 10
+    }
+  ],
+  "selected_ids": [
+    "https://openalex.org/W4390806602",
+    "https://openalex.org/W4402259598"
+  ],
+  "paper_details": {
+    "https://openalex.org/W4390806602": {
+      "id": "https://openalex.org/W4390806602",
+      "abstract": "Radar-based gesture recognition combined machine learning methods can achieve excellent performance and has been utilized in a wide variety of applications. However, large-scale radar signal processing suffers from the risk of privacy leakage and the problem of limited computing resources. In this paper, we propose a federated learning framework based on the spiking neural network to solve above limitations in radar gesture recognition. First, we build a distributed federated learning system with good privacy protection to process radar data collaboratively, which only exchanges the model parameters between clients to train the model, without the need for transferring the data itself. Second, we train the spiking neural network using the spike timing dependent plasticity with biological interpretability, which is more compatible with the biological characteristics and can significantly reduce the energy consumption. Our creative combination of low-power spiking neural network and federated learning thus address the issue of resource constraint of edge nodes in federated learning. Furthermore, we introduce the weight pruning technique to the federated learning training process to reduce the model's communication cost. We conduct experiments on the 8GHz radar gesture dataset and Google Soli dataset to test the proposed model's validity. We evaluate the model's performance across various participating devices and examine the spiking neural network's capacity to recognize gestures under independent identical distribution and non-independent identical distribution strategies in federated learning. We also analyze the energy consumption and communication cost of the proposed model, demonstrating the spike timing dependent plasticity-based algorithm is more energy efficient than the traditional backpropagation as well as the backpropagation through time algorithms."
+    },
+    "https://openalex.org/W4402259598": {
+      "id": "https://openalex.org/W4402259598",
+      "abstract": "Gesture recognition of millimeter-wave radar plays an important role in human-computer interaction within the current Internet of Everything context. Based on the signal pre-processing algorithm of MUSIC, this paper proposes a gesture recognition algorithm using error-correction code(ECC) module. Firstly, the gesture signals collected by millimeter-wave radar are processed into three sets of images of azimuth, elevation and depth by using signal processing algorithms such as MUSIC; then they are sent to the feature extraction network and output the discriminant code; finally, the discriminant codes are sent to ECC module to output the final verdict result. The addition of error correction code makes the whole decision mechanism more logical and robust, and it may also significantly enhance the real-time performance of gesture detection since it avoids the complicated network."
+    }
+  },
+  "last_keyword": "radar gesture recognition"
+}

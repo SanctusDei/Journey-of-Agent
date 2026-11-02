@@ -461,7 +461,7 @@ class PaperSearchAgent:
             })
 
 
-            return {
+        return {
             "query": query,
             "requested_top_k": top_k,
             "candidate_count": len(self.state.papers),
@@ -472,10 +472,17 @@ class PaperSearchAgent:
     
 
 if __name__ == "__main__":
-    
     import asyncio
+    from pathlib import Path
 
     async def main():
+        
+        state_path = (
+            Path(__file__).resolve().parents[2]
+            / "data"
+            / "state.json"
+        )
+
         # 整个交互过程只创建一次Agent
         agent = PaperSearchAgent(
             client=client,
@@ -483,30 +490,42 @@ if __name__ == "__main__":
             max_steps=8,
         )
 
+        # 读取存储的state
+        agent.state = AgentState.load(state_path)
 
-        first_answer = await agent.run(
-            query=(
-                "搜索2023—2026年 radar gesture recognition 论文，最多5篇。"
-                "在本次候选中按引用量选出前2篇，获取它们的摘要。"
-                "根据摘要比较识别方法，附标题和链接。"
-                "没有摘要时明确说明，不要推测论文方法。"
-            ),
-            target_papers=2,
+        console.print(    
+            f"已恢复 {len(agent.state.papers)} 篇候选论文,"
+            f"{len(agent.state.paper_details)} 条详情缓存"
         )
-        console.print(Markdown(first_answer))
+        try:
+            # 没有候选论文时，执行首次科研任务
+            if not agent.state.papers:
+                answer = await agent.run(
+                    query=(
+                        "搜索2023—2026年 radar gesture recognition 论文，最多5篇。"
+                        "在本次候选中按引用量选出前2篇，获取它们的摘要。"
+                        "根据摘要比较识别方法，附标题和链接。"
+                        "没有摘要时明确说明，不要推测论文方法。"
+                    ),
+                    target_papers=2,
+                )
+                agent.state.save(state_path)
+                console.print(Markdown(answer))
 
-        while True:
-            query = input("\n继续提问，输入 exit 结束：").strip()
+            while True:
+                query = input("\n继续提问，输入 exit 结束：").strip()
 
-            if query.lower() == "exit":
-                break
+                if query.lower() == "exit":
+                    break
 
-            if not query:
-                continue
-            console.print(f"本次收到的问题：{query!r}")
-            answer = await agent.run(query)
-            console.print(Markdown(answer))
-
+                if not query:
+                    continue
+                console.print(f"本次收到的问题：{query!r}")
+                answer = await agent.run(query)
+                agent.state.save(state_path)
+                console.print(Markdown(answer))
+        finally:
+            agent.state.save(state_path)
     asyncio.run(main())
 
 
@@ -680,5 +699,25 @@ Q4: Agent 如何回答'刚才选中的第一篇是什么?'
 
 全流程: 上一轮:rank_papers()选出论文 --> State 保存 Selected_ids --> snapshot() 提取论文信息
 --> 将摘要放进 Context --> LLM 读取Context 并回答
+
+"""
+
+"""
+Day 7
+
+Q1. State 与持久化记忆是什么关系?
+State 是运行时使用的数据；持久化将其中需要保留的部分保存下来，供下次启动恢复。
+
+Q2. 为什么不能把整个Agent保存为JSON?
+Agent 包含模型客户端、函数和 Embedding 模型等对象。今天只保存论文元数据和摘要等可转换为 JSON 的数据。
+
+Q3. 加载JSON后, 为什么还要调用 Paper.model_validata()?
+JSON 加载得到普通字典，需要恢复成现有代码使用的 Paper 对象。
+
+Q4. 恢复文件后，模型是否自动知道全部摘要？
+不会。摘要恢复到了 Python State 中，仍要通过状态摘要或工具结果提供给模型。
+
+Q5. 今天的持久化能否从上次中断的工具步骤继续执行?
+不能。当前保存的是论文数据，执行计划、循环位置和完整对话历史没有恢复。
 
 """

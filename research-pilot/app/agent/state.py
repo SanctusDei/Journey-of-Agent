@@ -1,3 +1,5 @@
+import json
+from pathlib import Path
 from dataclasses import dataclass, field
 from app.models.schemas import Paper
 
@@ -38,12 +40,61 @@ class AgentState:
             item["has_abstract"] = isinstance(abstract, str) and bool(abstract.strip())
 
             selected_papers.append(item)
-        
+
+    
         return {
             
             "paper_count": len(self.papers),
             "last_keyword": self.last_keyword,
             "selected_papers": selected_papers,
-            "plan": self.plan,
+            "plan": list(self.plan),
             "target_papers": self.target_papers,
         }
+
+    def save(self, path: str | Path) -> None:
+        data = {
+            "papers": [
+                {
+                    "id": paper.url,
+                    "title": paper.title,
+                    "publication_year": paper.year,
+                    "doi": paper.doi,
+                    "cited_by_count": paper.cited_by_count,
+                }
+                for paper in self.papers.values()
+            ],
+            "selected_ids": self.selected_ids,
+            "paper_details": self.paper_details,
+            "last_keyword": self.last_keyword,
+        }
+
+        file_path = Path(path)
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        file_path.write_text(
+            json.dumps(data, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+
+    @classmethod
+    def load(cls, path: str | Path) -> "AgentState":
+        
+        file_path = Path(path)
+
+        if not file_path.exists():
+            return cls()
+
+        data = json.loads(
+            file_path.read_text(encoding="utf-8")
+        )
+
+        papers = [
+            Paper.model_validate(item)
+            for item in data.get("papers", [])
+        ]
+
+        return cls(
+            papers={paper.url: paper for paper in papers},
+            selected_ids=data.get("selected_ids", []),
+            paper_details=data.get("paper_details", []),
+            last_keyword=data.get("last_keyword", ""),
+        )
