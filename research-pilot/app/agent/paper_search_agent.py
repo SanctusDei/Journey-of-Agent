@@ -76,23 +76,23 @@ RANK_PAPERS_TOOL = {
     "strict": False,
 }
 
-PAPER_DETAIL_TOOL = {
-    "type": "function",
-    "name": "get_paper_detail",
-    "description": "通过 OpeAlex Work ID 获取论文摘要和详细元数据。",
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "paper_id": {
-                "type":"string",
-                "description": "OpenAlex Work ID，例如 W123456789。",
-            },
-        },
-        "required": ["paper_id"],
-        "additionalProperties": False,
-    },
-    "strict": False
-}
+# PAPER_DETAIL_TOOL = {
+#     "type": "function",
+#     "name": "get_paper_detail",
+#     "description": "通过 OpeAlex Work ID 获取论文摘要和详细元数据。",
+#     "parameters": {
+#         "type": "object",
+#         "properties": {
+#             "paper_id": {
+#                 "type":"string",
+#                 "description": "OpenAlex Work ID，例如 W123456789。",
+#             },
+#         },
+#         "required": ["paper_id"],
+#         "additionalProperties": False,
+#     },
+#     "strict": False
+# }
 
 RETRIEVE_PAPERS_TOOL = {
     "type": "function",
@@ -115,10 +115,9 @@ RETRIEVE_PAPERS_TOOL = {
 }
 
 
-TOOLS = [
+LOCAL_TOOLS = [
     SEARCH_PAPERS_TOOL,
     RANK_PAPERS_TOOL,
-    PAPER_DETAIL_TOOL,
     RETRIEVE_PAPERS_TOOL
 ]
 
@@ -144,6 +143,8 @@ class PaperSearchAgent:
             device="cpu",
         )
 
+        self.tools = LOCAL_TOOLS.copy()
+        
     async def run(self, query: str, target_papers:int = 0) -> str:
         
         if not 0 <= target_papers <= 5:
@@ -202,7 +203,7 @@ class PaperSearchAgent:
 
             # 1. 询问模型
             responses = await self.client.responses.create(
-                model=self.model, input=messages, tools=TOOLS
+                model=self.model, input=messages, tools=self.tools
             )
 
             # 2. 保存模型输出
@@ -388,6 +389,35 @@ class PaperSearchAgent:
         parsed = TaskPlan.model_validate_json(response.output_text)
         return parsed.steps
 
+    async def load_mcp_tools(self) -> None:
+        async with MCPClient("http://localhost:8000/mcp") as client:
+            result = await client.list_tools()
+
+        for tool in result.tools:
+            if tool.name != "get_paper_detail":
+                continue
+
+            model_tool = {
+                "type": "function",
+                "name": tool.name,
+                "description": tool.description or "",
+                "parameters": tool.input_schema,
+                "strict": False,
+            }
+
+            self.tools = [
+                *LOCAL_TOOLS,
+                model_tool
+            ]
+
+            console.print(f"已从 MCP 加载工具: {tool.name}")
+            console.print(
+                "当前模型可用工具:",
+                [ item["name"] for item in self.tools ],
+            )
+            return
+        raise ValueError("MCP 服务未提供 get_paper_detail 工具")
+    
     def check_progress(self) -> dict:
         # 已经选中的论文ID
         ids = self.state.selected_ids
@@ -491,6 +521,7 @@ class PaperSearchAgent:
             "returned_count": len(results),
             "results": results,
         }
+
     
 
 if __name__ == "__main__":
@@ -511,6 +542,10 @@ if __name__ == "__main__":
             model=model,
             max_steps=8,
         )
+
+        # 加载MCP_tool
+
+        await agent.load_mcp_tools()
 
         # 读取存储的state
         agent.state = AgentState.load(state_path)
