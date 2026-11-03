@@ -9,6 +9,7 @@ from app.tools.paper_detail import get_paper_detail
 from app.models.schemas import TaskPlan
 from app.agent.state import AgentState
 from app.rag.retriever import retrieve_papers_semantic
+from mcp import Client as MCPClient
 from sentence_transformers import SentenceTransformer
 from rich.console import Console
 from rich.markdown import Markdown
@@ -248,7 +249,8 @@ class PaperSearchAgent:
  
         answer = f"达到最大执行轮数 {self.max_steps},Agent 停止运行"
         self.state.remember_turn(query, answer)
-    
+        return answer
+
     async def _execute_tool(self, tool_call) -> dict:
         """执行工具"""
         try:
@@ -344,9 +346,21 @@ class PaperSearchAgent:
             console.print(f"[dim]读取详情缓存：{work_id}[/dim]")
             return self.state.paper_details[paper_url]
 
-        console.print(f"[dim]请求 OpenAlex 详情：{work_id}[/dim]")
+        console.print(f"[dim]通过 MCP 获取详情：{work_id}[/dim]")
 
-        detail = await get_paper_detail(paper_id)
+        async with MCPClient("http://localhost:8000/mcp") as tool_client:
+            result = await tool_client.call_tool(
+                "get_paper_detail",
+                {"paper_id": paper_id}
+            )
+
+        if result.is_error:
+            raise ValueError(f"MCP 工具执行失败：{result.content}")
+
+        detail = result.structured_content
+
+        if not isinstance(detail, dict):
+            raise ValueError("MCP 论文详情工具未返回字典数据")
 
         self.state.paper_details[paper_url] = detail
 
@@ -749,5 +763,21 @@ Q4. 为什么只保留最近三轮?
 
 Q5. 历史回答能否直接当成新的论文证据?
 不能。历史回答可能存在错误；新增或核实事实时，应依据最新状态和工具返回的论文信息。
+
+"""
+
+"""
+Day 8
+Q1 MCP 和 Function Calling 分别做什么?
+Function Calling 让模型提出工具调用；MCP 让应用通过标准接口发现和调用工具服务。
+
+Q2 @mcp.tool 和 call_tool() 有什么区别?
+前者查询有哪些工具，后者实际执行指定工具。
+
+Q3 引入MCP后,摘要缓存保存在哪里?
+仍保存在 Agent 的 state.paper_details 中。MCP 服务负责获取并返回详情。
+
+Q4 为什么先检查 is_error, 再读取结果?
+调用返回了结果对象，不代表工具执行成功。失败结果不能当作正常论文详情保存。
 
 """
