@@ -130,6 +130,11 @@ class SearchGraphState(TypedDict):
     paper_count: int
     result: dict
 
+class AgentGraphState(TypedDict):
+    messages: list
+    tool_calls: list
+    answer: str
+    steps: int
 
 
 class PaperSearchAgent:
@@ -207,57 +212,83 @@ class PaperSearchAgent:
             ]
 
         # Agent Loop
-        for step in range(self.max_steps):
-            console.print(f"\n[cyan]第 {step + 1} 轮模型调用[/cyan]")
+        # for step in range(self.max_steps):
+        #     console.print(f"\n[cyan]第 {step + 1} 轮模型调用[/cyan]")
 
-            # 1. 询问模型
-            responses = await self.client.responses.create(
-                model=self.model, input=messages, tools=self.tools
-            )
+        #     # 1. 询问模型
+        #     responses = await self.client.responses.create(
+        #         model=self.model, input=messages, tools=self.tools
+        #     )
 
-            # 2. 保存模型输出
-            messages.extend(
-                item.model_dump(exclude_none=True) for item in responses.output
-            )
+        #     # 2. 保存模型输出
+        #     messages.extend(
+        #         item.model_dump(exclude_none=True) for item in responses.output
+        #     )
 
-            # 3. 提取工具调用
-            tool_calls = [
-                item for item in responses.output if item.type == "function_call"
-            ]
+        #     # 3. 提取工具调用
+        #     tool_calls = [
+        #         item for item in responses.output if item.type == "function_call"
+        #     ]
 
-            # 4. 如果模型不再调用工具，说明任务完成
-            if not tool_calls:
-                answer =  responses.output_text or ""
+        #     # 4. 如果模型不再调用工具，说明任务完成
+        #     if not tool_calls:
+        #         answer =  responses.output_text or ""
 
-                if self.state.target_papers > 0:
-                    progress = self.check_progress()
-                    if progress["status"] != "ready":
-                        answer =  (
-                            f"摘要证据尚未齐备：{progress}\n\n"
-                            f"{answer}"
-                        )
+        #         if self.state.target_papers > 0:
+        #             progress = self.check_progress()
+        #             if progress["status"] != "ready":
+        #                 answer =  (
+        #                     f"摘要证据尚未齐备：{progress}\n\n"
+        #                     f"{answer}"
+        #                 )
 
-                self.state.remember_turn(query, answer)
-                return answer
+        #         self.state.remember_turn(query, answer)
+        #         return answer
             
-            # 5. 执行工具
-            for tool_call in tool_calls:
-                tool_output = await self._execute_tool(tool_call)
+        #     # 5. 执行工具
+        #     for tool_call in tool_calls:
+        #         tool_output = await self._execute_tool(tool_call)
 
-                # 6. 将工具结果加入消息历史
-                messages.append(tool_output)
+        #         # 6. 将工具结果加入消息历史
+        #         messages.append(tool_output)
 
-            if self.state.target_papers > 0:
-                progress = self.check_progress()
-                console.print(f"摘要准备进度: {progress}")
+        #     if self.state.target_papers > 0:
+        #         progress = self.check_progress()
+        #         console.print(f"摘要准备进度: {progress}")
 
-                messages.append({
-                    "role": "system",
-                    "content": "Python核对的最新摘要准备进度:"
-                    + json.dumps(progress, ensure_ascii=False),
-                })
+        #         messages.append({
+        #             "role": "system",
+        #             "content": "Python核对的最新摘要准备进度:"
+        #             + json.dumps(progress, ensure_ascii=False),
+        #         })
  
-        answer = f"达到最大执行轮数 {self.max_steps},Agent 停止运行"
+        # answer = f"达到最大执行轮数 {self.max_steps},Agent 停止运行"
+        # self.state.remember_turn(query, answer)
+        # return answer
+
+        # LangGraph
+        graph = self.build_agent_graph()
+
+        result = await graph.ainvoke(
+
+            {
+                "messages": messages,
+                "tool_calls": [],
+                "answer": "",
+                "steps": 0,
+            },
+            config={
+                "recursion_limit": 2 * self.max_steps + 2,
+            }
+        )    
+
+        answer = result["answer"]
+
+        if self.state.target_papers > 0:
+            progress = self.check_progress()
+            if progress["status"] != "ready":
+                answer = answer = f"摘要证据尚未齐备：{progress}\n\n{answer}"
+        
         self.state.remember_turn(query, answer)
         return answer
 
@@ -574,7 +605,81 @@ class PaperSearchAgent:
         builder.add_edge("empty", END)
 
         return builder.compile()
+
+    def build_agent_graph(self):
+        if self.max_steps < 1:
+            raise ValueError("max_steps 必须至少为 1")
+
+        async def model_node(state: AgentGraphState):
+            steps = state["steps"] + 1
+            console.print(f"\n[cyan]第 {steps} 轮模型调用[/cyan]")
+
+            response = await self.client.responses.create(
+                model=self.model,
+                input=state["messages"],
+                tools=self.tools,
+            )
+
+            messages = list(state["messages"])
+            messages.extend(
+                item.model_dump(exclude_none=True)
+                for item in response.output
+            )
+
+            return {
+                "messages": messages,
+                "tool_calls": [
+                    item for item in response.output
+                    if item.type == "function_call"
+                ],
+                "answer": response.output_text or "",
+                "steps": steps,
+            }
+
+        async def tools_node(state: AgentGraphState):
+            messages = list(state["messages"])
+
+            for tool_call in state["tool_calls"]:
+                messages.append(await self._execute_tool(tool_call))
+
+            if self.state.target_papers > 0:
+                progress = self.check_progress()
+                console.print(f"摘要准备进度：{progress}")
+                messages.append({
+                    "role": "system",
+                    "content": "Python 核对的最新摘要准备进度："
+                    + json.dumps(progress, ensure_ascii=False),
+                })
+
+            answer = ""
     
+            if state["steps"] >= self.max_steps:
+                answer = f"达到最大执行轮数 {self.max_steps}，Agent 停止运行"
+
+            return {
+                "messages": messages,
+                "tool_calls": [],
+                "answer": answer
+            }
+
+        def after_model(state: AgentGraphState):
+            return "tools" if state["tool_calls"] else END
+        
+        def after_tools(state: AgentGraphState):
+            return END if state["steps"] >= self.max_steps else "model"
+
+        builder = StateGraph(AgentGraphState)
+        builder.add_node("model", model_node)
+        builder.add_node("tools", tools_node)
+        builder.add_edge(START, "model")
+        builder.add_conditional_edges(
+            "model", after_model, {"tools":"tools", END: END}
+        )
+        builder.add_conditional_edges(
+            "tools", after_tools, {"model":"model", END: END}
+        )
+
+        return builder.compile()
 
 if __name__ == "__main__":
     import asyncio
@@ -901,5 +1006,20 @@ Q4 为什么本节项目使用 ainvoke()
 
 Q5 用了LangGraph,流程就会自动具备模型自主决策能力吗?
 不会。自主决策需要接入模型节点，并根据模型输出设置工具执行和循环分支。
+
+Q6 model节点 和 tools节点 分别负责什么?
+前者请求模型并保存输出；后者执行模型提出的工具调用并保存结果。
+
+Q7 工具执行后为什么要回到模型节点?
+模型需要读取工具结果，决定继续调用工具还是回答用户。
+
+Q8 一次工具节点只能执行一个工具吗?
+不是。一次模型响应可以包含多个工具调用，当前工具节点会逐个执行。
+
+Q9 为什么不能只保存 response.output_text ？
+工具调用等信息位于 response.output 中，后续请求需要完整的调用与结果记录。
+
+Q10 LangGraph 执行步数是否等于模型调用次数?
+不等于。工具节点也占用图的执行步数，所以项目单独使用 steps 统计模型调用次数。
 
 """
