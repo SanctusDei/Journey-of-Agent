@@ -13,6 +13,8 @@ from mcp import Client as MCPClient
 from sentence_transformers import SentenceTransformer
 from rich.console import Console
 from rich.markdown import Markdown
+from typing_extensions import TypedDict
+from langgraph.graph import StateGraph, START, END
 
 load_dotenv()
 console = Console()
@@ -120,6 +122,13 @@ LOCAL_TOOLS = [
     RANK_PAPERS_TOOL,
     RETRIEVE_PAPERS_TOOL
 ]
+
+# 使用Langgraph
+
+class SearchGraphState(TypedDict):
+    keyword: str
+    paper_count: int
+    result: dict
 
 
 
@@ -522,6 +531,49 @@ class PaperSearchAgent:
             "results": results,
         }
 
+    def build_search_graph(self):
+        """构建搜索流程图"""
+        async def search_node(state: SearchGraphState):
+            console.print("[cyan]执行节点：search[/cyan]")
+
+            data = await self.search_and_save(
+                keyword=state["keyword"],
+                limit=5,
+            )
+
+            return { "paper_count": data["count"] }
+
+        def choose_next(state: SearchGraphState):
+            return "rank" if state["paper_count"] > 0 else "empty"
+
+        def rank_node(state: SearchGraphState):
+            console.print("[cyan]执行节点：rank[/cyan]")
+
+            data = self.rank_saved_papers(top_k=2)
+            return {"result": data}
+
+        def empty_node(state: SearchGraphState):
+            console.print("[cyan]执行节点：empty[/cyan]")
+
+            return {
+                "result": {"message": "本次搜索没有找到候选论文"}
+            }
+
+        builder = StateGraph(SearchGraphState)
+        builder.add_node("search", search_node)
+        builder.add_node("rank", rank_node)
+        builder.add_node("empty", empty_node)
+
+        builder.add_edge(START, "search")
+        builder.add_conditional_edges(
+            "search",
+            choose_next,
+            {"rank": "rank", "empty": "empty"},
+        )
+        builder.add_edge("rank", END)
+        builder.add_edge("empty", END)
+
+        return builder.compile()
     
 
 if __name__ == "__main__":
@@ -814,5 +866,40 @@ Q3 引入MCP后,摘要缓存保存在哪里?
 
 Q4 为什么先检查 is_error, 再读取结果?
 调用返回了结果对象，不代表工具执行成功。失败结果不能当作正常论文详情保存。
+
+Q5 list_tools() 会执行论文查询吗?
+不会。它返回工具定义，实际执行使用 call_tool()
+
+Q6 MCP 的 input_schema 应放到模型工具定义的哪个字段？
+parameters
+
+Q7 为什么已经发现工具，任然需要注册执行方法?
+工具定义告诉模型如何提出调用；执行方法负责真正调用服务、处理结果和更新 State。
+
+Q8 为什么再首次run() 前加载工具?
+模型调用时，self.tools 必须已经包含论文详情工具的描述。
+
+Q9 服务端新增一个工具，Agent就能自动执行它吗?
+当前版本还不能。本节只加载已接入的论文详情工具；新增工具还需要接好对应的执行路径。。
+
+"""
+
+"""
+Day 9
+
+Q1 LangGraph 的三个基本组成部分是什么?
+State 保存数据，Node 执行工作，Edge 决定后续路径。
+
+Q2 节点需要返回整个状态吗?
+不需要。可以只返回需要更新的字段，其他字段保留。
+
+Q3 普通边与条件边有什么区别?
+普通边指定固定的下一节点；条件边根据当前状态选择下一节点。
+
+Q4 为什么本节项目使用 ainvoke()
+搜索节点包含异步请求，需要通过异步方式运行整张图。
+
+Q5 用了LangGraph,流程就会自动具备模型自主决策能力吗?
+不会。自主决策需要接入模型节点，并根据模型输出设置工具执行和循环分支。
 
 """
