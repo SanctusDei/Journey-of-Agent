@@ -16,6 +16,7 @@ from rich.markdown import Markdown
 from typing_extensions import TypedDict
 from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.types import interrupt, Command
 from openai.types.responses import ResponseFunctionToolCall
 
 load_dotenv()
@@ -137,6 +138,7 @@ class AgentGraphState(TypedDict):
     tool_calls: list[dict]
     answer: str
     steps: int
+    query: str
 
 
 class PaperSearchAgent:
@@ -215,6 +217,9 @@ class PaperSearchAgent:
                     "数量、标题和链接以状态及工具结果为准，不要编造合并去重过程。"
                     "历史对话用于理解指代和整理已有回答。"
                     "新增或核实论文事实时，以最新状态和工具结果为准。"
+                    "论文详情缓存按 OpenAlex URL 复用；"
+                    "更换搜索关键词不代表同一论文的缓存摘要失效。"
+                    "需要报告缓存覆盖数量时，以工具返回的数据为准。"
                 ),
             },
             *self.state.chat_history,
@@ -279,22 +284,38 @@ class PaperSearchAgent:
         # LangGraph
         graph = self.agent_graph
 
+        config = {
+            "configurable": {
+                "thread_id": thread_id,
+            },
+            "recursion_limit": 2 * self.max_steps + 2,
+        }
+
         result = await graph.ainvoke(
 
             {
+                "query": query,
                 "messages": messages,
                 "tool_calls": [],
                 "answer": "",
                 "steps": 0,
             },
-            config={
-                "configurable": {
-                    "thread_id": thread_id,
-                },
-                "recursion_limit": 2 * self.max_steps + 2,
-            }
+            config=config,
         )    
 
+        while result.get("__interrupt__"):
+            question = result["__interrupt__"][0].value
+            console.print(question)
+
+            reply = input("补充信息: ").strip()
+            if not reply:
+                continue
+
+            result = await graph.ainvoke(
+                Command(resume=reply),
+                config=config,
+            )
+            
         answer = result["answer"]
 
         if self.state.target_papers > 0:
@@ -302,7 +323,7 @@ class PaperSearchAgent:
             if progress["status"] != "ready":
                 answer = answer = f"摘要证据尚未齐备：{progress}\n\n{answer}"
         
-        self.state.remember_turn(query, answer)
+        self.state.remember_turn(result["query"], answer)
         return answer
 
     async def _execute_tool(self, tool_call) -> dict:
@@ -623,6 +644,37 @@ class PaperSearchAgent:
         if self.max_steps < 1:
             raise ValueError("max_steps 必须至少为 1")
 
+        def clarify_node(state: AgentGraphState):
+            vague_queries = {
+                "帮我找论文",
+                "请帮我找论文",
+                "帮我搜索论文",
+                "请帮我搜索论文",
+                "搜索论文",
+            }
+
+            query = state["query"].strip().rstrip("。！？!?")
+            if query not in vague_queries:
+                return {}
+
+            topic = interrupt(
+                "请补充研究主题, 列如 radar gesture recognition"
+            )
+
+            full_query = (
+                f"请开始一次新的论文搜索，本次完整研究主题为: {topic}。"
+                "请仅依据本次完整主题生成检索词"
+            )
+
+
+            return {
+                "query": full_query,
+                "messages": [
+                    *state["messages"],
+                    {"role": "user", "content":full_query},
+                ],
+            }
+        
         async def model_node(state: AgentGraphState):
             steps = state["steps"] + 1
             console.print(f"\n[cyan]第 {steps} 轮模型调用[/cyan]")
@@ -686,10 +738,13 @@ class PaperSearchAgent:
         builder = StateGraph(AgentGraphState)
         builder.add_node("model", model_node)
         builder.add_node("tools", tools_node)
-        builder.add_edge(START, "model")
+        builder.add_node("clarify", clarify_node)
+        builder.add_edge(START, "clarify")
+        builder.add_edge("clarify", "model")
         builder.add_conditional_edges(
             "model", after_model, {"tools":"tools", END: END}
         )
+
         builder.add_conditional_edges(
             "tools", after_tools, {"model":"model", END: END}
         )
