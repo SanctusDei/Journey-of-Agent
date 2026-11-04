@@ -15,6 +15,8 @@ from rich.console import Console
 from rich.markdown import Markdown
 from typing_extensions import TypedDict
 from langgraph.graph import StateGraph, START, END
+from langgraph.checkpoint.memory import InMemorySaver
+from openai.types.responses import ResponseFunctionToolCall
 
 load_dotenv()
 console = Console()
@@ -132,7 +134,7 @@ class SearchGraphState(TypedDict):
 
 class AgentGraphState(TypedDict):
     messages: list
-    tool_calls: list
+    tool_calls: list[dict]
     answer: str
     steps: int
 
@@ -158,8 +160,16 @@ class PaperSearchAgent:
         )
 
         self.tools = LOCAL_TOOLS.copy()
+
+        self.checkpointer = InMemorySaver()
+        self.agent_graph = self.build_agent_graph()
         
-    async def run(self, query: str, target_papers:int = 0) -> str:
+    async def run(
+        self,
+        query: str,
+        target_papers:int = 0,
+        thread_id: str = "main",   
+        ) -> str:
         
         if not 0 <= target_papers <= 5:
             raise ValueError("target_papers 必须在0到5之间")
@@ -267,7 +277,7 @@ class PaperSearchAgent:
         # return answer
 
         # LangGraph
-        graph = self.build_agent_graph()
+        graph = self.agent_graph
 
         result = await graph.ainvoke(
 
@@ -278,6 +288,9 @@ class PaperSearchAgent:
                 "steps": 0,
             },
             config={
+                "configurable": {
+                    "thread_id": thread_id,
+                },
                 "recursion_limit": 2 * self.max_steps + 2,
             }
         )    
@@ -622,14 +635,15 @@ class PaperSearchAgent:
 
             messages = list(state["messages"])
             messages.extend(
-                item.model_dump(exclude_none=True)
+                item.model_dump(mode="json",exclude_none=True)
                 for item in response.output
             )
 
             return {
                 "messages": messages,
                 "tool_calls": [
-                    item for item in response.output
+                    item.model_dump(mode="json", exclude_none=True)
+                    for item in response.output
                     if item.type == "function_call"
                 ],
                 "answer": response.output_text or "",
@@ -639,7 +653,8 @@ class PaperSearchAgent:
         async def tools_node(state: AgentGraphState):
             messages = list(state["messages"])
 
-            for tool_call in state["tool_calls"]:
+            for item in state["tool_calls"]:
+                tool_call = ResponseFunctionToolCall.model_validate(item)
                 messages.append(await self._execute_tool(tool_call))
 
             if self.state.target_papers > 0:
@@ -679,7 +694,7 @@ class PaperSearchAgent:
             "tools", after_tools, {"model":"model", END: END}
         )
 
-        return builder.compile()
+        return builder.compile(checkpointer=self.checkpointer)
 
 if __name__ == "__main__":
     import asyncio
@@ -701,7 +716,6 @@ if __name__ == "__main__":
         )
 
         # 加载MCP_tool
-
         await agent.load_mcp_tools()
 
         # 读取存储的state
@@ -737,6 +751,12 @@ if __name__ == "__main__":
                     continue
                 console.print(f"本次收到的问题：{query!r}")
                 answer = await agent.run(query)
+                snapshot = await agent.agent_graph.aget_state({
+                    "configurable": {"thread_id":"main"},
+                })
+
+                console.print("图内模型调用次数：", snapshot.values["steps"])
+                console.print("下一节点：", snapshot.next)
                 agent.state.save(state_path)
                 console.print(Markdown(answer))
 
@@ -1021,5 +1041,25 @@ Q9 为什么不能只保存 response.output_text ？
 
 Q10 LangGraph 执行步数是否等于模型调用次数?
 不等于。工具节点也占用图的执行步数，所以项目单独使用 steps 统计模型调用次数。
+
+"""
+
+"""
+
+Day 10 
+Q1 检查点和之前的JSON缓存有什么区别?
+检查点记录图执行过程中的状态；JSON 缓存保存你选定的论文业务数据。当前内存检查点在重启后会消失。
+
+Q2 thread_id 是什么?
+图状态记录的逻辑会话标识，同一个标识可以找到同一组当前及历史检查点
+
+Q3 为什么在 __init__() 中创建 InMemorySaver?
+让多次调用复用它。每次都创建新的 Saver，会得到新的空存储。
+
+Q4 换一个 thread_id,是否连论文缓存也隔离了?
+没有。它隔离的是图状态；当前同一个 Agent 的图外 agent.state 仍然共享。
+
+Q5 使用同一个 thread_id, 历史消息就会自动追加?
+不会。状态如何更新取决于字段规则和本次输入；当前完整传入的消息列表会覆盖原值。
 
 """
