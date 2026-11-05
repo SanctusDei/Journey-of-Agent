@@ -128,13 +128,14 @@ LOCAL_TOOLS = [
 ]
 
 # 使用Langgraph
-
 class SearchGraphState(TypedDict):
     keyword: str
     paper_count: int
     result: dict
 
 class AgentGraphState(TypedDict):
+    """智能体执行流程的状态结构"""
+
     messages: list
     tool_calls: list[dict]
     answer: str
@@ -615,11 +616,17 @@ class PaperSearchAgent:
 
         return builder.compile()
 
-    def build_agent_graph(self):
+    def build_agent_graph(self):        
+        """构建并编译包含主题澄清、模型推理、工具执行和结果收尾的智能体状态图"""
+
+        #校验最大模型调用轮数，确保至少执行一轮
         if self.max_steps < 1:
             raise ValueError("max_steps 必须至少为 1")
 
         def clarify_node(state: AgentGraphState):
+            """检查查询是否缺少研究主题，必要时暂停流程并向用户询问"""
+
+            # 需要进一步澄清研究主题的常见模糊查询
             vague_queries = {
                 "帮我找论文",
                 "请帮我找论文",
@@ -628,20 +635,24 @@ class PaperSearchAgent:
                 "搜索论文",
             }
 
+            # 去除首尾空白以及末尾常见标点，再进行精准匹配
             query = state["query"].strip().rstrip("。！？!?")
             if query not in vague_queries:
+                # 返回空字典，表示不更新状态，继续后续流程
                 return {}
 
+            # 暂停图执行: 恢复执行时，用户提供的补充内容作为返回值
             topic = interrupt(
                 "请补充研究主题, 列如 radar gesture recognition"
             )
 
+            # 根据补充主题构造完整查询,明确本次检索的主题范围
             full_query = (
                 f"请开始一次新的论文搜索，本次完整研究主题为: {topic}。"
                 "请仅依据本次完整主题生成检索词"
             )
 
-
+            # 更新查询，并将完整查询追加到消息历史中
             return {
                 "query": full_query,
                 "messages": [
@@ -651,15 +662,21 @@ class PaperSearchAgent:
             }
         
         async def model_node(state: AgentGraphState):
+            """调用模型，记录相应，并提取待执行的工具调用"""
+
+            # 每次进入模型节点, 将模型调用轮数+1
             steps = state["steps"] + 1
             console.print(f"\n[cyan]第 {steps} 轮模型调用[/cyan]")
 
+            # 将消息历史和可用工具定义发送给模型
             response = await self.client.responses.create(
                 model=self.model,
                 input=state["messages"],
                 tools=self.tools,
             )
 
+            # 复制消息历史，追加模型返回的所以输出项
+            # 转化为 JSON 兼容的字典，同时省略值为 None 的字段
             messages = list(state["messages"])
             messages.extend(
                 item.model_dump(mode="json",exclude_none=True)
@@ -668,29 +685,38 @@ class PaperSearchAgent:
 
             return {
                 "messages": messages,
+                # 仅提取函数调用项，交给工具节点处理
                 "tool_calls": [
                     item.model_dump(mode="json", exclude_none=True)
                     for item in response.output
                     if item.type == "function_call"
                 ],
+                # 当前相应的文本内容: 没有文本时使用空字符串
                 "answer": response.output_text or "",
                 "steps": steps,
             }
 
         async def tools_node(state: AgentGraphState):
+            """依次执行工具调用, 更新业务状态，并反馈摘要准备进度"""
 
-            messages = list(state["messages"])
+            messages = list(state["messages"]) 
+
+            # 从图状态恢复业务对象，供工具执行过程读取和更新
             self.state = AgentState.from_dict(
                 state["business_state"]
             )
 
+            # 将工具调用字典还原为调用对象，逐个执行并追加工具结果
             for item in state["tool_calls"]:
                 tool_call = ResponseFunctionToolCall.model_validate(item)
                 messages.append(await self._execute_tool(tool_call))
 
+            # 已设置目标论文数量时,核对并反馈最新摘要准备进度
             if self.state.target_papers > 0:
                 progress = self.check_progress()
                 console.print(f"摘要准备进度：{progress}")
+
+                # 将程序核对的进度加入消息，供下一轮模型调用参考
                 messages.append({
                     "role": "system",
                     "content": "Python 核对的最新摘要准备进度："
@@ -698,24 +724,31 @@ class PaperSearchAgent:
                 })
 
             answer = ""
-    
+
+            # 当前轮的工具执行完成后，若已经达到轮数上限，设置停止说明
             if state["steps"] >= self.max_steps:
                 answer = f"达到最大执行轮数 {self.max_steps}，Agent 停止运行"
 
             return {
                 "messages": messages,
+                # 本轮工具已经执行完毕，清空待执行列表
                 "tool_calls": [],
                 "answer": answer,
+                # 将工具执行后更新的业务对象保存回图状态
                 "business_state": self.state.to_dict(),
             }
 
         async def finalize_node(state: AgentGraphState):
+            """检查摘要证据是否齐备，记录本轮交互，并保存最终状态"""
+
+            # 恢复最新业务状态
             self.state = AgentState.from_dict(
                 state["business_state"]
             )
 
             answer = state["answer"]
 
+            # 有论文数量目标时，在证据尚未备齐的回答前附加进度说明
             if self.state.target_papers > 0:
                 progress = self.check_progress()
                 if progress["status"] != "ready":
@@ -723,6 +756,7 @@ class PaperSearchAgent:
                         f"摘要证据尚未齐备: {progress}\n\n{answer}"
                     )
 
+            # 将本轮查询和最终回答写入业务对象的交互记忆
             self.state.remember_turn(state["query"], answer)
 
             return {
@@ -731,35 +765,46 @@ class PaperSearchAgent:
             }
         
         def after_model(state: AgentGraphState):
+            """模型请求调用工具时进入工具节点，否则进入收尾节点。"""
             return "tools" if state["tool_calls"] else "finalize"
         
         def after_tools(state: AgentGraphState):
+            """达到模型调用轮数上限时收尾，否则继续调用模型。"""
             if state["steps"] >= self.max_steps:
                 return "finalize"
             return "model"
 
+        # 使用 AgentGraphState 定义图中各节点共享的状态结构
         builder = StateGraph(AgentGraphState)
+        
+        # 注册模型、工具、澄清和收尾节点
         builder.add_node("model", model_node)
         builder.add_node("tools", tools_node)
         builder.add_node("clarify", clarify_node)
         builder.add_node("finalize", finalize_node)
 
+        # 流程入口：先检查是否需要澄清主题，再调用模型
         builder.add_edge(START, "clarify")
         builder.add_edge("clarify", "model")
 
+        # 根据模型是否产生工具调用，选择执行工具或直接收尾
         builder.add_conditional_edges(
             "model", 
             after_model,
             {"tools":"tools", "finalize": "finalize"}
         )
 
+        # 工具执行后，根据轮数限制选择继续推理或收尾
         builder.add_conditional_edges(
             "tools",
             after_tools,
             {"model":"model", "finalize": "finalize"}
         )
 
+        # 收尾完成后结束本次图执行
         builder.add_edge("finalize", END)
+
+        # 编译状态图，并配置检查点存储以支持状态保存和中断恢复
         return builder.compile(checkpointer=self.checkpointer)
 
     def _graph_config(self, thread_id: str) -> dict:

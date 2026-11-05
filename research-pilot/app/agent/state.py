@@ -86,6 +86,8 @@ class AgentState:
         self.chat_history = self.chat_history[-6:]
 
     def to_dict(self) -> dict:
+
+        """将业务对象转化成为普通字典"""
         
         return deepcopy({
             "papers":[
@@ -108,6 +110,7 @@ class AgentState:
 
     @classmethod
     def from_dict(cls, data: dict) -> "AgentState":
+        """将普通字典恢复为业务对象"""
         data = deepcopy(data)
         papers = [
             Paper.model_validate(item)
@@ -117,7 +120,7 @@ class AgentState:
         return cls(
             papers={paper.url: paper for paper in papers},
             selected_ids = data.get("selected_ids", []),
-            paper_details = data.get("paper_datails", {}),
+            paper_details = data.get("paper_deStails", {}),
             last_keyword = data.get("last_keyword", ""),
             plan = data.get("plan", []),
             target_papers = data.get("target_papers", 0),
