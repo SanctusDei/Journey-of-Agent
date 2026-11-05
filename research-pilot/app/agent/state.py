@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 from dataclasses import dataclass, field
 from app.models.schemas import Paper
+from copy import deepcopy
 
 @dataclass
 class AgentState:
@@ -55,8 +56,39 @@ class AgentState:
         }
 
     def save(self, path: str | Path) -> None:
-        data = {
-            "papers": [
+        
+        file_path = Path(path)
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        file_path.write_text(
+            json.dumps(self.to_dict(), ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+
+    @classmethod
+    def load(cls, path: str | Path) -> "AgentState":
+        
+        file_path = Path(path)
+
+        if not file_path.exists():
+            return cls()
+
+        return cls.from_dict(
+            json.loads(file_path.read_text(encoding="utf-8"))
+        )
+        
+    def remember_turn(self, query: str, answer: str) -> None:
+        self.chat_history.extend([
+            {"role": "user", "content": query},
+            {"role": "assistant", "content": answer},
+        ])
+
+        # 每轮两条消息，只保留最近三轮
+        self.chat_history = self.chat_history[-6:]
+
+    def to_dict(self) -> dict:
+        
+        return deepcopy({
+            "papers":[
                 {
                     "id": paper.url,
                     "title": paper.title,
@@ -69,28 +101,14 @@ class AgentState:
             "selected_ids": self.selected_ids,
             "paper_details": self.paper_details,
             "last_keyword": self.last_keyword,
-            "chat_history":self.chat_history,
-        }
-
-        file_path = Path(path)
-        file_path.parent.mkdir(parents=True, exist_ok=True)
-        file_path.write_text(
-            json.dumps(data, ensure_ascii=False, indent=2),
-            encoding="utf-8",
-        )
+            "plan": self.plan,
+            "target_papers": self.target_papers,
+            "chat_history": self.chat_history,
+        })
 
     @classmethod
-    def load(cls, path: str | Path) -> "AgentState":
-        
-        file_path = Path(path)
-
-        if not file_path.exists():
-            return cls()
-
-        data = json.loads(
-            file_path.read_text(encoding="utf-8")
-        )
-
+    def from_dict(cls, data: dict) -> "AgentState":
+        data = deepcopy(data)
         papers = [
             Paper.model_validate(item)
             for item in data.get("papers", [])
@@ -98,17 +116,10 @@ class AgentState:
 
         return cls(
             papers={paper.url: paper for paper in papers},
-            selected_ids=data.get("selected_ids", []),
-            paper_details=data.get("paper_details", {}),
-            last_keyword=data.get("last_keyword", ""),
-            chat_history=data.get("chat_history", [])[-6:],
+            selected_ids = data.get("selected_ids", []),
+            paper_details = data.get("paper_datails", {}),
+            last_keyword = data.get("last_keyword", ""),
+            plan = data.get("plan", []),
+            target_papers = data.get("target_papers", 0),
+            chat_history = data.get("chat_history", [])[-6:],
         )
-
-    def remember_turn(self, query: str, answer: str) -> None:
-        self.chat_history.extend([
-            {"role": "user", "content": query},
-            {"role": "assistant", "content": answer},
-        ])
-
-        # 每轮两条消息，只保留最近三轮
-        self.chat_history = self.chat_history[-6:]

@@ -1,109 +1,82 @@
 {
   "papers": [
     {
-      "id": "https://openalex.org/W4391652935",
-      "title": "In-sensor dynamic computing for intelligent machine vision",
+      "id": "https://openalex.org/W4407786542",
+      "title": "A Light Residual CNN for Radar Gesture Recognition",
       "publication_year": 2024,
-      "doi": "https://doi.org/10.1038/s41928-024-01124-0",
-      "cited_by_count": 201
-    },
-    {
-      "id": "https://openalex.org/W4390578902",
-      "title": "Multichannel meta-imagers for accelerating machine vision",
-      "publication_year": 2024,
-      "doi": "https://doi.org/10.1038/s41565-023-01557-2",
-      "cited_by_count": 119
-    },
-    {
-      "id": "https://openalex.org/W4387253498",
-      "title": "The Photographic Pipeline of Machine Vision; or, Machine Vision's Latent Photographic Theory",
-      "publication_year": 2023,
-      "doi": "https://doi.org/10.1215/2834703x-10734066",
-      "cited_by_count": 12
-    },
-    {
-      "id": "https://openalex.org/W7125283754",
-      "title": "Machine Vision",
-      "publication_year": 2026,
-      "doi": "https://doi.org/10.1007/978-981-95-1184-6_1",
+      "doi": "https://doi.org/10.1109/apcap62011.2024.10881168",
       "cited_by_count": 0
     },
     {
-      "id": "https://openalex.org/W4391485812",
-      "title": "Machine Vision",
+      "id": "https://openalex.org/W4416343137",
+      "title": "Robust Radar Gesture Recognition on the Edge",
+      "publication_year": 2025,
+      "doi": "https://doi.org/10.23919/eurad65285.2025.11234274",
+      "cited_by_count": 0
+    },
+    {
+      "id": "https://openalex.org/W4402259598",
+      "title": "Millimeter Wave Radar Gesture Recognition Based on ECC",
       "publication_year": 2024,
-      "doi": "https://doi.org/10.1201/9781003343783-9",
+      "doi": "https://doi.org/10.1109/igarss53475.2024.10642368",
       "cited_by_count": 1
     },
     {
-      "id": "https://openalex.org/W7128949802",
-      "title": "Machine Vision",
+      "id": "https://openalex.org/W7214564124",
+      "title": "FMCW millimeter-wave radar gesture recognition for smart buildings",
       "publication_year": 2026,
-      "doi": "https://doi.org/10.1007/978-3-658-45276-6_18",
+      "doi": "https://doi.org/10.1016/j.enbuild.2026.118315",
       "cited_by_count": 0
     },
     {
-      "id": "https://openalex.org/W4381435570",
-      "title": "Intelligent fish feeding based on machine vision: A review",
-      "publication_year": 2023,
-      "doi": "https://doi.org/10.1016/j.biosystemseng.2023.05.010",
-      "cited_by_count": 95
-    },
-    {
-      "id": "https://openalex.org/W4315926782",
-      "title": "Photoelectric Memristor-Based Machine Vision for Artificial Intelligence Applications",
-      "publication_year": 2023,
-      "doi": "https://doi.org/10.1021/acsmaterialslett.2c00911",
-      "cited_by_count": 126
-    },
-    {
-      "id": "https://openalex.org/W4405424063",
-      "title": "Machine Vision",
+      "id": "https://openalex.org/W4390806602",
+      "title": "Federated Learning for Radar Gesture Recognition Based on Spike Timing-Dependent Plasticity",
       "publication_year": 2024,
-      "doi": "https://doi.org/10.1007/978-3-031-76465-3_8",
+      "doi": "https://doi.org/10.1109/taes.2024.3353148",
+      "cited_by_count": 10
+    },
+    {
+      "id": "https://openalex.org/W7204754183",
+      "title": "An Electromagnetic Model and Inversion-Based Approach for Radar Gesture Recognition",
+      "publication_year": 2026,
+      "doi": "https://doi.org/10.1109/tim.2026.3729019",
       "cited_by_count": 0
     },
     {
-      "id": "https://openalex.org/W4401452460",
-      "title": "Preprocessing Enhanced Image Compression for Machine Vision",
-      "publication_year": 2024,
-      "doi": "https://doi.org/10.1109/tcsvt.2024.3441049",
-      "cited_by_count": 50
+      "id": "https://openalex.org/W7135053539",
+      "title": "Computationally Efficient Pruning Before Training Scheme for SNN‐Based Radar Gesture Recognition",
+      "publication_year": 2026,
+      "doi": "https://doi.org/10.1049/ell2.70537",
+      "cited_by_count": 0
+    },
+    {
+      "id": "https://openalex.org/W7213539290",
+      "title": "Domain-generalized millimeter-wave radar gesture recognition via multi-scale feature learning",
+      "publication_year": 2026,
+      "doi": "https://doi.org/10.1016/j.phycom.2026.103376",
+      "cited_by_count": 0
+    },
+    {
+      "id": "https://openalex.org/W4391128538",
+      "title": "A lightweight deep-learning radar gesture recognition based on a structured pruning-NAS",
+      "publication_year": 2023,
+      "doi": "https://doi.org/10.1109/ictc58733.2023.10393376",
+      "cited_by_count": 1
+    },
+    {
+      "id": "https://openalex.org/W7153190132",
+      "title": "A Multi-Scale Feature Fusion Method Based on DenseNet for UWB Radar Gesture Recognition",
+      "publication_year": 2026,
+      "doi": "https://doi.org/10.1109/access.2026.3682734",
+      "cited_by_count": 0
     }
   ],
   "selected_ids": [],
-  "paper_details": {
-    "https://openalex.org/W4390806602": {
-      "id": "https://openalex.org/W4390806602",
-      "abstract": "Radar-based gesture recognition combined machine learning methods can achieve excellent performance and has been utilized in a wide variety of applications. However, large-scale radar signal processing suffers from the risk of privacy leakage and the problem of limited computing resources. In this paper, we propose a federated learning framework based on the spiking neural network to solve above limitations in radar gesture recognition. First, we build a distributed federated learning system with good privacy protection to process radar data collaboratively, which only exchanges the model parameters between clients to train the model, without the need for transferring the data itself. Second, we train the spiking neural network using the spike timing dependent plasticity with biological interpretability, which is more compatible with the biological characteristics and can significantly reduce the energy consumption. Our creative combination of low-power spiking neural network and federated learning thus address the issue of resource constraint of edge nodes in federated learning. Furthermore, we introduce the weight pruning technique to the federated learning training process to reduce the model's communication cost. We conduct experiments on the 8GHz radar gesture dataset and Google Soli dataset to test the proposed model's validity. We evaluate the model's performance across various participating devices and examine the spiking neural network's capacity to recognize gestures under independent identical distribution and non-independent identical distribution strategies in federated learning. We also analyze the energy consumption and communication cost of the proposed model, demonstrating the spike timing dependent plasticity-based algorithm is more energy efficient than the traditional backpropagation as well as the backpropagation through time algorithms."
-    },
-    "https://openalex.org/W4402259598": {
-      "id": "https://openalex.org/W4402259598",
-      "abstract": "Gesture recognition of millimeter-wave radar plays an important role in human-computer interaction within the current Internet of Everything context. Based on the signal pre-processing algorithm of MUSIC, this paper proposes a gesture recognition algorithm using error-correction code(ECC) module. Firstly, the gesture signals collected by millimeter-wave radar are processed into three sets of images of azimuth, elevation and depth by using signal processing algorithms such as MUSIC; then they are sent to the feature extraction network and output the discriminant code; finally, the discriminant codes are sent to ECC module to output the final verdict result. The addition of error correction code makes the whole decision mechanism more logical and robust, and it may also significantly enhance the real-time performance of gesture detection since it avoids the complicated network."
-    },
-    "https://openalex.org/W4323644373": {
-      "id": "https://openalex.org/W4323644373",
-      "abstract": "Regarding increasingly complex scenarios in hand gesture recognition (HGR), it is challenging to implement a reliable HGR due to the non-adaptability of individual sensors to the environment and the discrepancy of personal habits. Multisensor fusion has been deemed an effective way to overcome the limitations of a single sensor. However, there is a lack of research on HGR to effectively establish bridges linking multimodal heterogeneous information. To address this issue, we propose a novel multimodal dynamic HGR method based on a two-branch fusion deformable network with Gram matching. First, a time-synchronized method is designed to preprocess the multimodal data. Second, a two-branch network is proposed to implement gesture classification based on radar-vision fusion. The input convolution is replaced by the deformable convolution to improve the generalization of gesture motion modeling. The long short-term memory (LSTM) unit is utilized to extract the temporal features of dynamic hand gestures. Third, Gram matching is presented as a loss function to mine high-dimensional heterogeneous information and maintain the integrity of radar-vision fusion. The experimental results indicate that the proposed method effectively improves the adaptability of the classifier to complex environments and exhibits satisfactory robustness to multiple subjects. Furthermore, ablation analysis shows that deformable convolution and Gram loss not only provide reliable gesture recognition but also enhance the generalization ability of the proposed methods in different field-of-view scenarios."
-    }
-  },
-  "last_keyword": "machine vision",
+  "paper_details": {},
+  "last_keyword": "radar gesture recognition",
+  "plan": [],
+  "target_papers": 0,
   "chat_history": [
-    {
-      "role": "user",
-      "content": "请开始一次新的论文搜索，本次完整研究主题为: machine learning。请仅依据本次完整主题生成检索词"
-    },
-    {
-      "role": "assistant",
-      "content": "## 检索已完成（与上一轮结果相同）\n\n**本次调用**：`search_papers(keyword=\"machine learning\", start_year=2023, end_year=2026, limit=10)`\n**检索词生成**：仅依据完整主题 machine learning，未附加任何限定词\n**返回**：`count = 10`，`update_mode = replace`\n\n### 如实说明：本次返回与前一轮完全一致\n\n逐条比对本次返回与前一轮的 10 条预览（URL、标题、年份、引用量），**全部对应相同**，无新增条目，也无条目消失。原因是检索词、年份区间、`limit` 三者与上一轮完全相同。我没有做任何合并或去重操作——这是同一检索的重复执行。\n\n### 当前候选论文（10 篇，工具返回顺序）\n\n| # | 标题 | 年份 | 引用量 | 链接 |\n|---|---|---|---|---|\n| 1 | Machine learning for microbiologists | 2023 | 265 | https://openalex.org/W4388698868 |\n| 2 | Machine Learning Mastery | 2024 | 200 | https://openalex.org/W4396219753 |\n| 3 | Machine Learning Research | 2023 | 108 | https://openalex.org/W748373178 |\n| 4 | Machine learning and deep learning—A review for ecologists | 2023 | 472 | https://openalex.org/W4320733708 |\n| 5 | Machine learning for nanoplasmonics | 2023 | 151 | https://openalex.org/W4318071560 |\n| 6 | Machine learning algorithms review | 2023 | 466 | https://openalex.org/W4383560187 |\n| 7 | Journal of Machine Learning Technologies | 2024 | 636 | https://openalex.org/W1809873675 |\n| 8 | Designing nanotheranostics with machine learning | 2024 | 213 | https://openalex.org/W4403104495 |\n| 9 | Machine Learning-Guided Protein Engineering | 2023 | 211 | https://openalex.org/W4387601539 |\n| 10 | Fairness in Machine Learning: A Survey | 2023 | 652 | https://openalex.org/W3092541244 |\n\n### 数量区分\n\n| 项目 | 数值 |\n|---|---|\n| 候选论文数（当前状态） | **10** |\n| 本次工具实际返回条数 | **10** |\n| 具备缓存摘要的论文数 | **0**（本次响应仅含预览字段，无摘要） |\n| 参与语义检索的摘要数 | **0**（未调用 `retrieve_saved_papers`） |\n\n`count = 10` 是本次请求返回上限对应的条数，**不是**该主题在 2023–2026 的文献总量，**也不构成检索覆盖率**。\n\n### 结果性质\n\n- 这 10 篇是关键词命中候选，标题均涉及 machine learning。主题设为宽泛的 machine learning 后，结果跨领域分散：微生物学、生态学综述、纳米光子学、纳米诊疗、蛋白质工程、算法综述、公平性综述。\n- 第 7 条 `Journal of Machine Learning Technologies` 从标题看是**期刊条目性质**的记录，而非研究论文，供你判断时参考。\n- 我**尚未获取任何一篇的摘要**，因此不能就其方法、数据集、结论或性能给出证据性比较。引用量为工具返回值。\n\n### 继续推进的选项\n\n- **A**：`rank_papers(top_k=N)` 在当前 10 篇内按引用量正式排序\n- **B**：`get_paper_detail` 指定 Work ID 取摘要（建议先取 W3092541244 公平性综述、W4383560187 算法综述、W4320733708 生态学综述这三篇通用性较强的）\n- **C**：收窄关键词后重搜（会再次 replace 候选集），例如 `machine learning review`、`machine learning algorithms`、`machine learning protein engineering`\n- **D**：回到上一轮的雷达手势识别方向（关键词 `radar gesture recognition machine learning`，会替换当前候选集）\n\n若你希望结果有实质变化，需要改动检索词或年份区间——继续用同样参数重复执行只会得到同一批 10 篇。请指定下一步。"
-    },
-    {
-      "role": "user",
-      "content": "请搜索有关机器学习的论文"
-    },
-    {
-      "role": "assistant",
-      "content": "## 检索已执行，结果与当前候选集完全相同\n\n**本次调用**：`search_papers(keyword=\"machine learning\", start_year=2023, end_year=2026, limit=10)`\n**检索词生成依据**：仅取本次主题\"机器学习\"对应的英文关键词 `machine learning`，未附加任何限定词\n**返回**：`count = 10`，`update_mode = replace`\n\n### 与前一次返回的逐条比对结论\n\n10 条的 URL、标题、年份、引用量**一一对应，无新增、无缺失**。因为关键词、年份区间、`limit` 与前一次完全一致，OpenAlex 返回同一批记录。我未做任何合并或去重，这只是一次重复执行的同一检索。\n\n| # | 标题 | 年份 | 引用量 | 链接 |\n|---|---|---|---|---|\n| 1 | Machine learning for microbiologists | 2023 | 265 | https://openalex.org/W4388698868 |\n| 2 | Machine Learning Mastery | 2024 | 200 | https://openalex.org/W4396219753 |\n| 3 | Machine Learning Research | 2023 | 108 | https://openalex.org/W748373178 |\n| 4 | Machine learning and deep learning—A review for ecologists | 2023 | 472 | https://openalex.org/W4320733708 |\n| 5 | Machine learning for nanoplasmonics | 2023 | 151 | https://openalex.org/W4318071560 |\n| 6 | Machine learning algorithms review | 2023 | 466 | https://openalex.org/W4383560187 |\n| 7 | Journal of Machine Learning Technologies | 2024 | 636 | https://openalex.org/W1809873675 |\n| 8 | Designing nanotheranostics with machine learning | 2024 | 213 | https://openalex.org/W4403104495 |\n| 9 | Machine Learning-Guided Protein Engineering | 2023 | 211 | https://openalex.org/W4387601539 |\n| 10 | Fairness in Machine Learning: A Survey | 2023 | 652 | https://openalex.org/W3092541244 |\n\n### 三类数量必须分开\n\n| 项目 | 数值 | 说明 |\n|---|---|---|\n| 候选论文数 | **10** | 当前会话状态中的候选集合 |\n| 本次实际返回数 | **10** | 受 `limit=10` 约束 |\n| 参与检索的摘要数 | **0** | 尚未调用 `retrieve_saved_papers`；`get_paper_detail` 未在这 10 篇上执行 |\n| 已确认缓存摘要的论文 | **0** | 这 10 篇目前均未取摘要 |\n\n`count = 10` 是本请求返回上限对应的条数，**不是** machine learning 在 2023–2026 的文献总量，**也不代表检索覆盖率**。\n\n### 两点如实提示\n\n1. **相关性 ≠ 内容证据**：这 10 篇是按关键词命中的候选，标题都含 machine learning。主题宽泛导致结果跨领域分散（微生物学、生态学综述、纳米光子学、纳米诊疗、蛋白质工程、算法综述、公平性综述）。其中第 7 条从标题看是**期刊条目**性质，而非研究论文。\n2. **无法给出实质性比较**：这 10 篇的摘要一篇都还没取，因此我不能就其方法、数据集、结论、性能说任何有证据的话。表中引用量是工具返回值。\n\n### 若想让结果真正变化，需要改参数或换动作\n\n- **A** 放大返回量：`limit=50`（会 replace，可能带来新条目，仍是同一检索式）\n- **B** 放宽年份：如 2020–2026 或 2015–2026，可纳入更早的高被引基础工作\n- **C** 收窄子方向后重搜：`machine learning review`、`machine learning algorithms`、`machine learning fairness`、`machine learning healthcare`\n- **D** 不再重搜，转入内容层：我按 Work ID 取摘要（建议先取综述类，通用性最强：W3092541244 公平性、W4383560187 算法综述、W4320733708 生态学；或期刊条目 W1809873675 用于确认其性质）\n- **E** 已在候选集内正式排序：`rank_papers(top_k=N)`\n\n**推荐 D**：关键词已定，重复执行只会得到同一批 10 篇；取到摘要后才能谈论方法与结论。请告诉我选哪个，或直接给需要取摘要的 URL / 序号。"
-    },
     {
       "role": "user",
       "content": "请搜索关于机器视觉方向的论文"
@@ -111,6 +84,22 @@
     {
       "role": "assistant",
       "content": "## 检索已完成（主题已切换：machine learning → machine vision）\n\n**本次调用**：`search_papers(keyword=\"machine vision\", start_year=2023, end_year=2026, limit=10)`\n**检索词**：仅取本次主题“机器视觉”对应的英文关键词 `machine vision`，未附加任何限定词\n**返回**：`count = 10`，`update_mode = replace` —— **此前的 10 篇 machine learning 候选已被整体替换**，不在当前候选集中\n\n> 说明：由于本轮主题已变为“机器视觉”，即使它常被视为 machine learning 的应用领域，检索式也必须按本次完整主题生成，因此没有沿用 `machine learning`。\n\n### 当前候选论文（10 篇，工具返回顺序）\n\n| # | 标题 | 年份 | 引用量 | 链接 |\n|---|---|---|---|---|\n| 1 | In-sensor dynamic computing for intelligent machine vision | 2024 | 201 | https://openalex.org/W4391652935 |\n| 2 | Multichannel meta-imagers for accelerating machine vision | 2024 | 119 | https://openalex.org/W4390578902 |\n| 3 | The Photographic Pipeline of Machine Vision; or, Machine Vision's Latent Photographic Theory | 2023 | 12 | https://openalex.org/W4387253498 |\n| 4 | Machine Vision | 2026 | 0 | https://openalex.org/W7125283754 |\n| 5 | Machine Vision | 2024 | 1 | https://openalex.org/W4391485812 |\n| 6 | Machine Vision | 2026 | 0 | https://openalex.org/W7128949802 |\n| 7 | Intelligent fish feeding based on machine vision: A review | 2023 | 95 | https://openalex.org/W4381435570 |\n| 8 | Photoelectric Memristor-Based Machine Vision for Artificial Intelligence Applications | 2023 | 126 | https://openalex.org/W4315926782 |\n| 9 | Machine Vision | 2024 | 0 | https://openalex.org/W4405424063 |\n| 10 | Preprocessing Enhanced Image Compression for Machine Vision | 2024 | 50 | https://openalex.org/W4401452460 |\n\n### 数量区分\n\n| 项目 | 数值 | 说明 |\n|---|---|---|\n| 候选论文数（当前状态） | **10** | 已 replace 为 machine vision 结果 |\n| 本次工具实际返回条数 | **10** | 受 `limit=10` 约束 |\n| 参与语义检索的摘要数 | **0** | 未调用 `retrieve_saved_papers` |\n| 已确认缓存摘要的论文 | **0** | 这 10 篇均未取摘要 |\n\n`count = 10` 是本次返回上限对应的条数，**不是** machine vision 在 2023–2026 的文献总量，也不代表检索覆盖。\n\n### 对这批结果的如实判断\n\n1. **领域分布比上一轮更集中**：明显偏向**硬件/器件与成像光学**路线（第 1、2、8 篇：传感器内动态计算、多通道超构成像器、光电忆阻器）与**应用/工程**路线（第 7 篇鱼类投喂综述、第 10 篇面向机器视觉的图像压缩预处理）。此外第 3 篇属**人文学科/媒介理论**视角，非工程技术。\n2. **有 4 条标题完全为 “Machine Vision”**（第 4、5、6、9 篇），引用量为 0 或 1，标题无区分信息，从形态看更像**期刊、丛书卷或教材条目**而非研究论文。是否如此需取详情核实，我不做断定。\n3. **无内容证据**：这 10 篇摘要一篇都未获取，因此不能就其方法、数据集、结论、性能给出任何证据性陈述。表中引用量为工具返回值。\n\n### 建议下一步\n\n- **A**（推荐）：`get_paper_detail` 取摘要，优先核实四条同名 “Machine Vision” 记录的实际性质，并读取信息量最高的几篇（建议 W4391652935、W4381435570、W4401452460）\n- **B**：`rank_papers(top_k=N)` 在当前 10 篇内按引用量正式排序\n- **C**：收窄子方向重搜（会再次 replace），如 `industrial machine vision inspection`、`machine vision defect detection`、`deep learning machine vision`\n- **D**：放宽年份至 2015–2026 或提高 `limit` 至 50，以获取更完整的候选面\n\n请指定下一步。"
+    },
+    {
+      "role": "user",
+      "content": "请开始一次新的论文搜索，本次完整研究主题为: radar gesture recognition。请仅依据本次完整主题生成检索词"
+    },
+    {
+      "role": "assistant",
+      "content": "## 检索已完成（主题已切换：machine vision → radar gesture recognition）\n\n**本次调用**：`search_papers(keyword=\"radar gesture recognition\", start_year=2023, end_year=2026, limit=10)`\n**检索词生成依据**：仅取本次完整主题“radar gesture recognition”本身，未附加任何限定词（如未加 deep learning、millimeter wave、survey 等）\n**返回**：`count = 10`，`update_mode = replace` —— 上一轮 machine vision 的 10 篇候选**已被整体替换**，不再属于当前候选集\n\n### 当前候选论文（10 篇，工具返回顺序）\n\n| # | 标题 | 年份 | 引用量 | 链接 |\n|---|---|---|---|---|\n| 1 | A Light Residual CNN for Radar Gesture Recognition | 2024 | 0 | https://openalex.org/W4407786542 |\n| 2 | Robust Radar Gesture Recognition on the Edge | 2025 | 0 | https://openalex.org/W4416343137 |\n| 3 | Millimeter Wave Radar Gesture Recognition Based on ECC | 2024 | 1 | https://openalex.org/W4402259598 |\n| 4 | FMCW millimeter-wave radar gesture recognition for smart buildings | 2026 | 0 | https://openalex.org/W7214564124 |\n| 5 | Federated Learning for Radar Gesture Recognition Based on Spike Timing-Dependent Plasticity | 2024 | 10 | https://openalex.org/W4390806602 |\n| 6 | An Electromagnetic Model and Inversion-Based Approach for Radar Gesture Recognition | 2026 | 0 | https://openalex.org/W7204754183 |\n| 7 | Computationally Efficient Pruning Before Training Scheme for SNN-Based Radar Gesture Recognition | 2026 | 0 | https://openalex.org/W7135053539 |\n| 8 | Domain-generalized millimeter-wave radar gesture recognition via multi-scale feature learning | 2026 | 0 | https://openalex.org/W7213539290 |\n| 9 | A lightweight deep-learning radar gesture recognition based on a structured pruning-NAS | 2023 | 1 | https://openalex.org/W4391128538 |\n| 10 | A Multi-Scale Feature Fusion Method Based on DenseNet for UWB Radar Gesture Recognition | 2026 | 0 | https://openalex.org/W7153190132 |\n\n### 数量区分（三类数量不可混用）\n\n| 项目 | 数值 | 说明 |\n|---|---|---|\n| 候选论文数（当前状态） | **10** | 已整体替换为本次结果 |\n| 本次工具实际返回条数 | **10** | 受 `limit=10` 约束 |\n| 参与语义检索的摘要数 | **0** | 未调用 `retrieve_saved_papers` |\n| 已确认缓存摘要的论文 | **0** | 这 10 篇均尚未取摘要；「未查询」≠「无摘要」 |\n\n`count = 10` 是本次请求返回上限对应的条数，**不是** radar gesture recognition 在 2023–2026 的文献总量，**也不构成检索覆盖率**。\n\n### 可如实作出的观察（仅基于标题与元数据，非内容证据）\n\n1. **主题集中度明显高于前两轮**：10 条标题全部明确含 radar + gesture recognition，说明该关键词的专指性较强。\n2. **技术路线大致可分为几类**（依标题措辞归类，属相关性与形态判断）：\n   - 轻量化 / 边缘部署：第 1、2、7、9 篇（残差 CNN、on the edge、pruning-before-training、pruning-NAS）\n   - 毫米波 / FMCW 与 UWB 频段与波形：第 3、4、8、10 篇\n   - 学习范式与模型创新：第 5 篇联邦学习 + STDP（脉冲时序依赖可塑性）、第 7 篇 SNN\n   - 非纯数据驱动的物理建模：第 6 篇电磁模型与反演方法\n3. **引用量普遍偏低**（最高仅 10，4 篇为 2026 年新文，引用量为 0）。这是 2023–2026 时间窗内该细分方向的现实反映，可供你判断成熟度，但是工具返回值，不是我的评价。\n4. **尚无可陈述的研究内容**：这 10 篇摘要一篇都未获取，我无法就其数据集、精度、推理开销、实验设置或结论作任何带证据的表述。\n\n### 建议下一步\n\n- **A（推荐）**：取摘要后做内容级梳理。建议优先 W4407786542（轻量残差 CNN）、W4390806602（引量最高的联邦学习/STDP）、W7213539290（域泛化多尺度）、W7204754183（电磁模型反演，路线独特性强）\n- **B**：`rank_papers(top_k=N)` 在当前 10 篇内按引用量正式排序\n- **C**：收窄或扩展重搜（会再次 replace 候选集），例如 `millimeter wave radar gesture recognition`、`radar gesture recognition deep learning`、`radar gesture recognition dataset`，或放宽至 2018–2026 以纳入该方向早期奠基工作（如 2016–2020 年的 mmWave 手势识别数据集类论文）\n- **D**：提高 `limit` 至 30–50，扩大同一检索式的候选面\n\n请指定下一步，或直接给出需要取摘要的序号 / URL。"
+    },
+    {
+      "role": "user",
+      "content": "exit()"
+    },
+    {
+      "role": "assistant",
+      "content": "## 会话结束\n\n已按你的指令终止，不再发起任何检索或取摘要操作。\n\n### 结束时状态（以会话状态与工具结果为准）\n\n| 项目 | 数值 |\n|---|---|\n| 当前候选论文数 | **10** |\n| 最近检索关键词 | `radar gesture recognition`（2023–2026，`limit=10`） |\n| 已确认缓存的摘要数 | **0** |\n| 最近一次工具返回条数 | 10（受 `limit=10` 约束，非文献总量、非覆盖率） |\n\n### 本轮工作如实回顾\n\n1. **共执行 3 次检索，每次均为 replace**，候选集依次为：`machine learning`(10) → `machine vision`(10) → `radar gesture recognition`(10)。未做任何合并或去重，历史候选集已被替换覆盖。\n2. **全程未获取任何摘要**，因此三轮回答中我没有对任何论文的方法、数据集、精度、结论作出证据性陈述；只报告了标题、年份、引用量与链接等工具返回值，并对标题形态（如 4 条同名 “Machine Vision”）作了**形态层面的观察并明确标注需核实**，未下结论。\n3. **数量口径已分开**：候选论文数、实际返回数、参与检索的摘要数、已缓存摘要数，四者未被混用。\n\n### 留下的一条提示\n\n`radar gesture recognition` 的 10 篇候选目前**全部无摘要缓存**——「未查询」不等于「无摘要」。若你希望继续，最省成本的起点是这几篇的详情：W4407786542、W4390806602、W7213539290、W7204754183。\n\n会话已结束，随时可重新开始。"
     }
   ]
 }

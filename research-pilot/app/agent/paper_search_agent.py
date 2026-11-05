@@ -140,7 +140,7 @@ class AgentGraphState(TypedDict):
     answer: str
     steps: int
     query: str
-
+    business_state: dict
 
 class PaperSearchAgent:
 
@@ -177,6 +177,12 @@ class PaperSearchAgent:
         
         if not 0 <= target_papers <= 5:
             raise ValueError("target_papers 必须在0到5之间")
+
+        config = self._graph_config(thread_id)
+        previous = await self.agent_graph.aget_state(config)
+
+        if previous.next:
+            raise ValueError("存在未完成任务，请先调用 resume()")
 
         self.state.target_papers = target_papers
         self.state.plan = []
@@ -283,51 +289,18 @@ class PaperSearchAgent:
         # self.state.remember_turn(query, answer)
         # return answer
 
-        # LangGraph
-        graph = self.agent_graph
-
-        config = {
-            "configurable": {
-                "thread_id": thread_id,
-            },
-            "recursion_limit": 2 * self.max_steps + 2,
-        }
-
-        result = await graph.ainvoke(
-
+        return await self._drive_graph(
             {
                 "query": query,
                 "messages": messages,
                 "tool_calls": [],
                 "answer": "",
                 "steps": 0,
+                "business_state": self.state.to_dict(),
             },
-            config=config,
-        )    
-
-        while result.get("__interrupt__"):
-            question = result["__interrupt__"][0].value
-            console.print(question)
-
-            reply = input("补充信息: ").strip()
-            if not reply:
-                continue
-
-            result = await graph.ainvoke(
-                Command(resume=reply),
-                config=config,
-            )
-            
-        answer = result["answer"]
-
-        if self.state.target_papers > 0:
-            progress = self.check_progress()
-            if progress["status"] != "ready":
-                answer = answer = f"摘要证据尚未齐备：{progress}\n\n{answer}"
+            config,
+        )
         
-        self.state.remember_turn(result["query"], answer)
-        return answer
-
     async def _execute_tool(self, tool_call) -> dict:
         """执行工具"""
         try:
@@ -705,7 +678,11 @@ class PaperSearchAgent:
             }
 
         async def tools_node(state: AgentGraphState):
+
             messages = list(state["messages"])
+            self.state = AgentState.from_dict(
+                state["business_state"]
+            )
 
             for item in state["tool_calls"]:
                 tool_call = ResponseFunctionToolCall.model_validate(item)
@@ -728,31 +705,115 @@ class PaperSearchAgent:
             return {
                 "messages": messages,
                 "tool_calls": [],
-                "answer": answer
+                "answer": answer,
+                "business_state": self.state.to_dict(),
             }
 
+        async def finalize_node(state: AgentGraphState):
+            self.state = AgentState.from_dict(
+                state["business_state"]
+            )
+
+            answer = state["answer"]
+
+            if self.state.target_papers > 0:
+                progress = self.check_progress()
+                if progress["status"] != "ready":
+                    answer = (
+                        f"摘要证据尚未齐备: {progress}\n\n{answer}"
+                    )
+
+            self.state.remember_turn(state["query"], answer)
+
+            return {
+                "answer": answer,
+                "business_state": self.state.to_dict(),
+            }
+        
         def after_model(state: AgentGraphState):
-            return "tools" if state["tool_calls"] else END
+            return "tools" if state["tool_calls"] else "finalize"
         
         def after_tools(state: AgentGraphState):
-            return END if state["steps"] >= self.max_steps else "model"
+            if state["steps"] >= self.max_steps:
+                return "finalize"
+            return "model"
 
         builder = StateGraph(AgentGraphState)
         builder.add_node("model", model_node)
         builder.add_node("tools", tools_node)
         builder.add_node("clarify", clarify_node)
+        builder.add_node("finalize", finalize_node)
+
         builder.add_edge(START, "clarify")
         builder.add_edge("clarify", "model")
+
         builder.add_conditional_edges(
-            "model", after_model, {"tools":"tools", END: END}
+            "model", 
+            after_model,
+            {"tools":"tools", "finalize": "finalize"}
         )
 
         builder.add_conditional_edges(
-            "tools", after_tools, {"model":"model", END: END}
+            "tools",
+            after_tools,
+            {"model":"model", "finalize": "finalize"}
         )
 
+        builder.add_edge("finalize", END)
         return builder.compile(checkpointer=self.checkpointer)
 
+    def _graph_config(self, thread_id: str) -> dict:
+        return {
+            "configurable": {"thread_id": thread_id},
+            "recursion_limit": 2 * self.max_steps + 3,
+        }
+
+    async def _drive_graph(self, graph_input, config: dict) -> str:
+        
+        result = await self.agent_graph.ainvoke(
+            graph_input,
+            config=config,
+            durability="sync",
+        )
+
+        while result.get("__interrupt__"):
+            console.print(result["__interrupt__"])
+
+            reply = input("补充信息: ").strip()
+            if not reply :
+                continue
+
+            result = await self.agent_graph.ainvoke(
+                Command(resume=reply),
+                config=config,
+                durability="sync",
+            )
+
+        self.state = AgentState.from_dict(result["business_state"])
+        return result["answer"]
+
+    async def resume(self, thread_id: str = "main") -> str:
+        config = self._graph_config(thread_id)
+        previous = await self.agent_graph.aget_state(config)
+
+        # 检查有无历史检查点
+        if not previous.values:
+            raise ValueError("当前线程没有可恢复的任务")
+
+        # 判断检查点中是否有论文数据
+        if "business_state" not in previous.values:
+            raise ValueError("旧检查点没有完整论文状态，无法恢复该任务")
+
+        self.state = AgentState.from_dict(
+            previous.values["business_state"]
+        )
+
+        # 判断任务是否结束
+        if not previous.next:
+            return previous.values.get("answer", "")
+
+        return await self._drive_graph(None, config)
+    
 if __name__ == "__main__":
 
     import asyncio
@@ -780,29 +841,35 @@ if __name__ == "__main__":
         # 读取存储的state
         agent.state = AgentState.load(state_path)
 
-        console.print(    
-            f"已恢复 {len(agent.state.papers)} 篇候选论文,"
+        previous = await agent.agent_graph.aget_state(
+            agent._graph_config("main")
+        )
+
+        if "business_state" in previous.values:
+            agent.state = AgentState.from_dict(
+                previous.values["business_state"]
+            )
+
+        console.print(
+            f"已恢复 {len(agent.state.papers)} 篇候选论文，"
             f"{len(agent.state.paper_details)} 条详情缓存"
         )
 
-        previous = await agent.agent_graph.aget_state({
-            "configurable": {"thread_id": "main"},
-        })
-
         if previous.values:
-            console.print("已读取 SQLite 历史图记录")
             console.print("上次任务：", previous.values.get("query", ""))
-            console.print(
-                "上次模型调用次数：",
-                previous.values.get("steps", 0),
-            )
             console.print("下一节点：", previous.next)
         else:
             console.print("尚无历史图记录")
 
         try:
+            if previous.next:
+                console.print("继续上次未完成的任务")
+                answer = await agent.resume()
+                agent.state.save(state_path)
+                console.print(Markdown(answer))
+
             # 没有候选论文时，执行首次科研任务
-            if not agent.state.papers:
+            elif not agent.state.papers:
                 answer = await agent.run(
                     query=(
                         "搜索2023—2026年 radar gesture recognition 论文，最多5篇。"
@@ -1157,4 +1224,31 @@ Q7 为什么项目使用 AsyncSqliteSaver ？
 
 Q8 为什么数据库连接要包住整个交互过程?
 图执行和读取检查点时都需要使用连接，交互结束后再关闭。
+
+Q9 恢复时只保持 thread_id 相同就够了吗？
+还需要读取同一个数据库，并使用匹配的图定义。
+
+Q10 SQLite 会自动保存图外的 agent.state 吗?
+不会。检查点保存的是图状态；当前论文业务缓存仍由 JSON 保存逻辑管理。
+"""
+
+"""
+
+Day 11
+
+Q1 为什么接入 SQLite 后，还需要修改论文状态?
+SQLite 保存图状态；原来的论文、摘要和计划在图外的 self.state 中，需要主动放入检查点。
+
+Q2 to_dict() 和 from_dict() 分别做什么?
+前者把完整业务状态转换成可保存的字典；后者从字典恢复 AgentState 对象.
+
+Q3 为什么恢复任务不能再次调用 run() ?
+run() 会初始化新任务。恢复任务应读取原检查点，用 None 继续执行；回答中断问题时用 Command(resume=...)。
+
+Q4 为什么增加 finalize 节点?
+让最终回答、证据检查结果和聊天历史一起进入检查点。
+
+Q5 恢复后回从退出时的那一行继续吗?
+不会。恢复按节点进行，未完成的节点可能重新执行。
+
 """
