@@ -18,6 +18,7 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import interrupt, Command
 from openai.types.responses import ResponseFunctionToolCall
+from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 
 load_dotenv()
 console = Console()
@@ -142,7 +143,8 @@ class AgentGraphState(TypedDict):
 
 
 class PaperSearchAgent:
-    def __init__(self, client: AsyncOpenAI, model: str, max_steps: int = 5):
+
+    def __init__(self, client: AsyncOpenAI, model: str, max_steps: int = 5, checkpointer=None):
         self.client = client
         self.model = model
         self.max_steps = max_steps
@@ -163,7 +165,7 @@ class PaperSearchAgent:
 
         self.tools = LOCAL_TOOLS.copy()
 
-        self.checkpointer = InMemorySaver()
+        self.checkpointer = checkpointer if checkpointer is not None else InMemorySaver()
         self.agent_graph = self.build_agent_graph()
         
     async def run(
@@ -752,10 +754,11 @@ class PaperSearchAgent:
         return builder.compile(checkpointer=self.checkpointer)
 
 if __name__ == "__main__":
+
     import asyncio
     from pathlib import Path
 
-    async def main():
+    async def chat(checkpointer):
         
         state_path = (
             Path(__file__).resolve().parents[2]
@@ -768,6 +771,7 @@ if __name__ == "__main__":
             client=client,
             model=model,
             max_steps=8,
+            checkpointer=checkpointer
         )
 
         # 加载MCP_tool
@@ -780,6 +784,21 @@ if __name__ == "__main__":
             f"已恢复 {len(agent.state.papers)} 篇候选论文,"
             f"{len(agent.state.paper_details)} 条详情缓存"
         )
+
+        previous = await agent.agent_graph.aget_state({
+            "configurable": {"thread_id": "main"},
+        })
+
+        if previous.values:
+            console.print("已读取 SQLite 历史图记录")
+            console.print("上次任务：", previous.values.get("query", ""))
+            console.print(
+                "上次模型调用次数：",
+                previous.values.get("steps", 0),
+            )
+            console.print("下一节点：", previous.next)
+        else:
+            console.print("尚无历史图记录")
 
         try:
             # 没有候选论文时，执行首次科研任务
@@ -806,6 +825,7 @@ if __name__ == "__main__":
                     continue
                 console.print(f"本次收到的问题：{query!r}")
                 answer = await agent.run(query)
+
                 snapshot = await agent.agent_graph.aget_state({
                     "configurable": {"thread_id":"main"},
                 })
@@ -817,6 +837,18 @@ if __name__ == "__main__":
 
         finally:
             agent.state.save(state_path)
+    
+    async def main():
+        database = (
+            Path(__file__).resolve().parents[2]
+            / "data"
+            / "checkpoints.sqlite"
+        )
+        database.parent.mkdir(parents=True, exist_ok=True)
+
+        async with AsyncSqliteSaver.from_conn_string(str(database)) as saver:
+            await chat(saver)
+
     asyncio.run(main())
 
 
@@ -1117,4 +1149,12 @@ Q4 换一个 thread_id,是否连论文缓存也隔离了?
 Q5 使用同一个 thread_id, 历史消息就会自动追加?
 不会。状态如何更新取决于字段规则和本次输入；当前完整传入的消息列表会覆盖原值。
 
+Q6 SQLite 相比内存检查点增加了什么能力?
+将图状态保存到文件，程序重启后仍可读取
+
+Q7 为什么项目使用 AsyncSqliteSaver ？
+项目通过 ainvoke()、aget_state() 等异步接口运行，需要使用异步 Saver。
+
+Q8 为什么数据库连接要包住整个交互过程?
+图执行和读取检查点时都需要使用连接，交互结束后再关闭。
 """

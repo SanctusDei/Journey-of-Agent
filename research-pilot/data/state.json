@@ -1,74 +1,74 @@
 {
   "papers": [
     {
-      "id": "https://openalex.org/W4388698868",
-      "title": "Machine learning for microbiologists",
-      "publication_year": 2023,
-      "doi": "https://doi.org/10.1038/s41579-023-00984-1",
-      "cited_by_count": 265
-    },
-    {
-      "id": "https://openalex.org/W4396219753",
-      "title": "Machine Learning Mastery",
+      "id": "https://openalex.org/W4391652935",
+      "title": "In-sensor dynamic computing for intelligent machine vision",
       "publication_year": 2024,
-      "doi": "https://doi.org/10.4018/979-8-3693-2909-2.ch002",
-      "cited_by_count": 200
+      "doi": "https://doi.org/10.1038/s41928-024-01124-0",
+      "cited_by_count": 201
     },
     {
-      "id": "https://openalex.org/W748373178",
-      "title": "Machine Learning Research",
-      "publication_year": 2023,
-      "doi": "https://doi.org/10.11648/j.mlr",
-      "cited_by_count": 108
-    },
-    {
-      "id": "https://openalex.org/W4320733708",
-      "title": "Machine learning and deep learning—A review for ecologists",
-      "publication_year": 2023,
-      "doi": "https://doi.org/10.1111/2041-210x.14061",
-      "cited_by_count": 472
-    },
-    {
-      "id": "https://openalex.org/W4318071560",
-      "title": "Machine learning for nanoplasmonics",
-      "publication_year": 2023,
-      "doi": "https://doi.org/10.1038/s41565-022-01284-0",
-      "cited_by_count": 151
-    },
-    {
-      "id": "https://openalex.org/W4383560187",
-      "title": "Machine learning algorithms review",
-      "publication_year": 2023,
-      "doi": "https://doi.org/10.54254/2755-2721/4/20230355",
-      "cited_by_count": 466
-    },
-    {
-      "id": "https://openalex.org/W1809873675",
-      "title": "Journal of Machine Learning Technologies",
+      "id": "https://openalex.org/W4390578902",
+      "title": "Multichannel meta-imagers for accelerating machine vision",
       "publication_year": 2024,
-      "doi": "https://doi.org/10.9735/2229-3981",
-      "cited_by_count": 636
+      "doi": "https://doi.org/10.1038/s41565-023-01557-2",
+      "cited_by_count": 119
     },
     {
-      "id": "https://openalex.org/W4403104495",
-      "title": "Designing nanotheranostics with machine learning",
+      "id": "https://openalex.org/W4387253498",
+      "title": "The Photographic Pipeline of Machine Vision; or, Machine Vision's Latent Photographic Theory",
+      "publication_year": 2023,
+      "doi": "https://doi.org/10.1215/2834703x-10734066",
+      "cited_by_count": 12
+    },
+    {
+      "id": "https://openalex.org/W7125283754",
+      "title": "Machine Vision",
+      "publication_year": 2026,
+      "doi": "https://doi.org/10.1007/978-981-95-1184-6_1",
+      "cited_by_count": 0
+    },
+    {
+      "id": "https://openalex.org/W4391485812",
+      "title": "Machine Vision",
       "publication_year": 2024,
-      "doi": "https://doi.org/10.1038/s41565-024-01753-8",
-      "cited_by_count": 213
+      "doi": "https://doi.org/10.1201/9781003343783-9",
+      "cited_by_count": 1
     },
     {
-      "id": "https://openalex.org/W4387601539",
-      "title": "Machine Learning-Guided Protein Engineering",
-      "publication_year": 2023,
-      "doi": "https://doi.org/10.1021/acscatal.3c02743",
-      "cited_by_count": 211
+      "id": "https://openalex.org/W7128949802",
+      "title": "Machine Vision",
+      "publication_year": 2026,
+      "doi": "https://doi.org/10.1007/978-3-658-45276-6_18",
+      "cited_by_count": 0
     },
     {
-      "id": "https://openalex.org/W3092541244",
-      "title": "Fairness in Machine Learning: A Survey",
+      "id": "https://openalex.org/W4381435570",
+      "title": "Intelligent fish feeding based on machine vision: A review",
       "publication_year": 2023,
-      "doi": "https://doi.org/10.1145/3616865",
-      "cited_by_count": 652
+      "doi": "https://doi.org/10.1016/j.biosystemseng.2023.05.010",
+      "cited_by_count": 95
+    },
+    {
+      "id": "https://openalex.org/W4315926782",
+      "title": "Photoelectric Memristor-Based Machine Vision for Artificial Intelligence Applications",
+      "publication_year": 2023,
+      "doi": "https://doi.org/10.1021/acsmaterialslett.2c00911",
+      "cited_by_count": 126
+    },
+    {
+      "id": "https://openalex.org/W4405424063",
+      "title": "Machine Vision",
+      "publication_year": 2024,
+      "doi": "https://doi.org/10.1007/978-3-031-76465-3_8",
+      "cited_by_count": 0
+    },
+    {
+      "id": "https://openalex.org/W4401452460",
+      "title": "Preprocessing Enhanced Image Compression for Machine Vision",
+      "publication_year": 2024,
+      "doi": "https://doi.org/10.1109/tcsvt.2024.3441049",
+      "cited_by_count": 50
     }
   ],
   "selected_ids": [],
@@ -86,24 +86,8 @@
       "abstract": "Regarding increasingly complex scenarios in hand gesture recognition (HGR), it is challenging to implement a reliable HGR due to the non-adaptability of individual sensors to the environment and the discrepancy of personal habits. Multisensor fusion has been deemed an effective way to overcome the limitations of a single sensor. However, there is a lack of research on HGR to effectively establish bridges linking multimodal heterogeneous information. To address this issue, we propose a novel multimodal dynamic HGR method based on a two-branch fusion deformable network with Gram matching. First, a time-synchronized method is designed to preprocess the multimodal data. Second, a two-branch network is proposed to implement gesture classification based on radar-vision fusion. The input convolution is replaced by the deformable convolution to improve the generalization of gesture motion modeling. The long short-term memory (LSTM) unit is utilized to extract the temporal features of dynamic hand gestures. Third, Gram matching is presented as a loss function to mine high-dimensional heterogeneous information and maintain the integrity of radar-vision fusion. The experimental results indicate that the proposed method effectively improves the adaptability of the classifier to complex environments and exhibits satisfactory robustness to multiple subjects. Furthermore, ablation analysis shows that deformable convolution and Gram loss not only provide reliable gesture recognition but also enhance the generalization ability of the proposed methods in different field-of-view scenarios."
     }
   },
-  "last_keyword": "machine learning",
+  "last_keyword": "machine vision",
   "chat_history": [
-    {
-      "role": "user",
-      "content": "请帮我搜索论文"
-    },
-    {
-      "role": "assistant",
-      "content": "## 需要你补充一个信息：关键词\n\n`search_papers` 的 `keyword` 是必填项，而\"请帮我搜索论文\"没有指明关键词。上一轮你给的主题是 **machine learning**，但我当时也提了一个尚未得到答复的问题——**要把 machine learning 当作独立主题检索，还是继续用\"雷达手势识别 + 机器学习\"的交集**。这两者结果差别很大，所以先确认再动手。\n\n### 为什么必须先确认\n\n`search_papers` 是 **replace** 模式：一旦执行，**当前 10 篇候选会被整体替换**。如果我用宽泛的 `machine learning` 去搜 2023–2026，很可能拿回一批泛泛的 ML 论文，把现在的雷达手势论文集合（含引用量 37 的 W4391128458 等）挤出去。这不是不可恢复，但要跑两趟才能回来。\n\n### 请选一个（回数字即可）\n\n| 选项 | 关键词 | 结果预期 | 对当前候选的影响 |\n|---|---|---|---|\n| **1** | `radar gesture recognition machine learning`（同上一轮） | 与现有 10 篇基本重合 | 替换但内容相近 |\n| **2** | 继续该交集，但**换角度扩展**，例如 `mmWave radar deep learning gesture`、`FMCW radar gesture classification CNN` | 会带来新的邻近论文 | 候选被重写 |\n| **3** | **独立主题** `machine learning`（你上轮的字面主题） | 大量通用 ML 论文，与雷达手势脱钩 | 候选被整体换掉 |\n| **4** | 你自定的关键词 | 按你要求 | 候选被整体重写 |\n| **5** | **不重新搜索**，直接在现有 10 篇上继续（取摘要 / 排序 / 语义检索） | 保住现有候选 | 无变化 |\n\n### 顺带的两个默认参数（如需改动请一并说明）\n\n- 年份区间：**2023–2026**（如需含更早的经典工作，请放宽）\n- 返回数量：**limit=10**\n\n### 当前状态（未变动）\n\n| 项目 | 值 |\n|---|---|\n| 候选论文数 | 10（上一轮检索建立，**未被替换**） |\n| 上一轮关键词 | `radar gesture recognition machine learning` |\n| 引用量最高 | W4391128458，37 次 |\n| 已确认缓存摘要 | 仅 W4390806602（本轮未重新核实） |\n| 本次是否调用工具 | **否**（等待关键词） |\n\n把关键词（或选项号）给我，我立刻执行；若选 2/3/4，我会在结果里标出哪些是上一轮没有的新增条目。"
-    },
-    {
-      "role": "user",
-      "content": "请开始一次新的论文搜索，本次完整研究主题为: machine learning。请仅依据本次完整主题生成检索词"
-    },
-    {
-      "role": "assistant",
-      "content": "## 检索已完成\n\n**本次调用**：`search_papers(keyword=\"machine learning\", start_year=2023, end_year=2026, limit=10)`\n**检索词生成**：仅依据本次完整主题 machine learning，未附加其他限定词\n**返回**：`count = 10`，`update_mode = replace` —— **前一轮的 10 篇雷达手势论文候选已被整体替换**（含引用量 37 的 W4391128458，现已不在候选内；此前缓存的 W4390806602 摘要对应论文也已移出当前候选集）\n\n### 当前候选论文（10 篇，工具返回顺序）\n\n| # | 标题 | 年份 | 引用量 | 链接 |\n|---|---|---|---|---|\n| 1 | Machine learning for microbiologists | 2023 | 265 | https://openalex.org/W4388698868 |\n| 2 | Machine Learning Mastery | 2024 | 200 | https://openalex.org/W4396219753 |\n| 3 | Machine Learning Research | 2023 | 108 | https://openalex.org/W748373178 |\n| 4 | Machine learning and deep learning—A review for ecologists | 2023 | 472 | https://openalex.org/W4320733708 |\n| 5 | Machine learning for nanoplasmonics | 2023 | 151 | https://openalex.org/W4318071560 |\n| 6 | Machine learning algorithms review | 2023 | 466 | https://openalex.org/W4383560187 |\n| 7 | Journal of Machine Learning Technologies | 2024 | 636 | https://openalex.org/W1809873675 |\n| 8 | Designing nanotheranostics with machine learning | 2024 | 213 | https://openalex.org/W4403104495 |\n| 9 | Machine Learning-Guided Protein Engineering | 2023 | 211 | https://openalex.org/W4387601539 |\n| 10 | Fairness in Machine Learning: A Survey | 2023 | 652 | https://openalex.org/W3092541244 |\n\n### 必须区分的几个数量\n\n| 项目 | 数值 |\n|---|---|\n| 候选论文数（当前状态） | **10** |\n| 本次工具实际返回条数 | **10** |\n| 已具备缓存摘要的论文数 | **0**（本次响应未含摘要字段） |\n| 参与语义检索的摘要数 | **0**（尚未调用 `retrieve_saved_papers`） |\n\n`count=10` 只是本次请求的返回上限所对应的条数，**不代表** machine learning 主题在 2023–2026 的文献总量，也不构成检索覆盖率。\n\n### 关于结果质量的两点如实说明\n\n1. **相关性的性质**：这 10 篇是按关键词命中的候选，标题均含 machine learning / machine learning 相关表述。但主题被设为单独的 machine learning 后，结果呈现明显的**跨领域分散**——微生物学、生态学、纳米光子学、纳米诊疗、蛋白质工程、算法综述、公平性综述，以及一条期刊记录（`Journal of Machine Learning Technologies`，第 7 条，看起来是**期刊条目而非研究论文**）。这是宽泛主题检索的正常表现，不是这 10 篇构成某个统一研究前沿的证据。\n2. **无内容证据**：我**尚未获取任何一篇的摘要**，因此不能就其方法、数据集、结论或性能做任何实质性比较。上表引用量为工具返回值。\n\n### 下一步可选\n\n- **A**：`rank_papers(top_k=N)` 在当前 10 篇内按引用量正式排序（我未自行排序，上表是工具原始顺序）\n- **B**：`get_paper_detail` 按 Work ID 取摘要，例如先取引用量最高的 W3092541244 或 W1809873675\n- **C**：收窄主题后重搜（会再次替换候选集），例如 `machine learning review`、`machine learning fairness`、`machine learning protein engineering`\n- **D**：保持候选不变，用英文 query 对已缓存摘要做语义检索 —— 但当前缓存为 0 篇，需先做 B\n\n请指定下一步。"
-    },
     {
       "role": "user",
       "content": "请开始一次新的论文搜索，本次完整研究主题为: machine learning。请仅依据本次完整主题生成检索词"
@@ -111,6 +95,22 @@
     {
       "role": "assistant",
       "content": "## 检索已完成（与上一轮结果相同）\n\n**本次调用**：`search_papers(keyword=\"machine learning\", start_year=2023, end_year=2026, limit=10)`\n**检索词生成**：仅依据完整主题 machine learning，未附加任何限定词\n**返回**：`count = 10`，`update_mode = replace`\n\n### 如实说明：本次返回与前一轮完全一致\n\n逐条比对本次返回与前一轮的 10 条预览（URL、标题、年份、引用量），**全部对应相同**，无新增条目，也无条目消失。原因是检索词、年份区间、`limit` 三者与上一轮完全相同。我没有做任何合并或去重操作——这是同一检索的重复执行。\n\n### 当前候选论文（10 篇，工具返回顺序）\n\n| # | 标题 | 年份 | 引用量 | 链接 |\n|---|---|---|---|---|\n| 1 | Machine learning for microbiologists | 2023 | 265 | https://openalex.org/W4388698868 |\n| 2 | Machine Learning Mastery | 2024 | 200 | https://openalex.org/W4396219753 |\n| 3 | Machine Learning Research | 2023 | 108 | https://openalex.org/W748373178 |\n| 4 | Machine learning and deep learning—A review for ecologists | 2023 | 472 | https://openalex.org/W4320733708 |\n| 5 | Machine learning for nanoplasmonics | 2023 | 151 | https://openalex.org/W4318071560 |\n| 6 | Machine learning algorithms review | 2023 | 466 | https://openalex.org/W4383560187 |\n| 7 | Journal of Machine Learning Technologies | 2024 | 636 | https://openalex.org/W1809873675 |\n| 8 | Designing nanotheranostics with machine learning | 2024 | 213 | https://openalex.org/W4403104495 |\n| 9 | Machine Learning-Guided Protein Engineering | 2023 | 211 | https://openalex.org/W4387601539 |\n| 10 | Fairness in Machine Learning: A Survey | 2023 | 652 | https://openalex.org/W3092541244 |\n\n### 数量区分\n\n| 项目 | 数值 |\n|---|---|\n| 候选论文数（当前状态） | **10** |\n| 本次工具实际返回条数 | **10** |\n| 具备缓存摘要的论文数 | **0**（本次响应仅含预览字段，无摘要） |\n| 参与语义检索的摘要数 | **0**（未调用 `retrieve_saved_papers`） |\n\n`count = 10` 是本次请求返回上限对应的条数，**不是**该主题在 2023–2026 的文献总量，**也不构成检索覆盖率**。\n\n### 结果性质\n\n- 这 10 篇是关键词命中候选，标题均涉及 machine learning。主题设为宽泛的 machine learning 后，结果跨领域分散：微生物学、生态学综述、纳米光子学、纳米诊疗、蛋白质工程、算法综述、公平性综述。\n- 第 7 条 `Journal of Machine Learning Technologies` 从标题看是**期刊条目性质**的记录，而非研究论文，供你判断时参考。\n- 我**尚未获取任何一篇的摘要**，因此不能就其方法、数据集、结论或性能给出证据性比较。引用量为工具返回值。\n\n### 继续推进的选项\n\n- **A**：`rank_papers(top_k=N)` 在当前 10 篇内按引用量正式排序\n- **B**：`get_paper_detail` 指定 Work ID 取摘要（建议先取 W3092541244 公平性综述、W4383560187 算法综述、W4320733708 生态学综述这三篇通用性较强的）\n- **C**：收窄关键词后重搜（会再次 replace 候选集），例如 `machine learning review`、`machine learning algorithms`、`machine learning protein engineering`\n- **D**：回到上一轮的雷达手势识别方向（关键词 `radar gesture recognition machine learning`，会替换当前候选集）\n\n若你希望结果有实质变化，需要改动检索词或年份区间——继续用同样参数重复执行只会得到同一批 10 篇。请指定下一步。"
+    },
+    {
+      "role": "user",
+      "content": "请搜索有关机器学习的论文"
+    },
+    {
+      "role": "assistant",
+      "content": "## 检索已执行，结果与当前候选集完全相同\n\n**本次调用**：`search_papers(keyword=\"machine learning\", start_year=2023, end_year=2026, limit=10)`\n**检索词生成依据**：仅取本次主题\"机器学习\"对应的英文关键词 `machine learning`，未附加任何限定词\n**返回**：`count = 10`，`update_mode = replace`\n\n### 与前一次返回的逐条比对结论\n\n10 条的 URL、标题、年份、引用量**一一对应，无新增、无缺失**。因为关键词、年份区间、`limit` 与前一次完全一致，OpenAlex 返回同一批记录。我未做任何合并或去重，这只是一次重复执行的同一检索。\n\n| # | 标题 | 年份 | 引用量 | 链接 |\n|---|---|---|---|---|\n| 1 | Machine learning for microbiologists | 2023 | 265 | https://openalex.org/W4388698868 |\n| 2 | Machine Learning Mastery | 2024 | 200 | https://openalex.org/W4396219753 |\n| 3 | Machine Learning Research | 2023 | 108 | https://openalex.org/W748373178 |\n| 4 | Machine learning and deep learning—A review for ecologists | 2023 | 472 | https://openalex.org/W4320733708 |\n| 5 | Machine learning for nanoplasmonics | 2023 | 151 | https://openalex.org/W4318071560 |\n| 6 | Machine learning algorithms review | 2023 | 466 | https://openalex.org/W4383560187 |\n| 7 | Journal of Machine Learning Technologies | 2024 | 636 | https://openalex.org/W1809873675 |\n| 8 | Designing nanotheranostics with machine learning | 2024 | 213 | https://openalex.org/W4403104495 |\n| 9 | Machine Learning-Guided Protein Engineering | 2023 | 211 | https://openalex.org/W4387601539 |\n| 10 | Fairness in Machine Learning: A Survey | 2023 | 652 | https://openalex.org/W3092541244 |\n\n### 三类数量必须分开\n\n| 项目 | 数值 | 说明 |\n|---|---|---|\n| 候选论文数 | **10** | 当前会话状态中的候选集合 |\n| 本次实际返回数 | **10** | 受 `limit=10` 约束 |\n| 参与检索的摘要数 | **0** | 尚未调用 `retrieve_saved_papers`；`get_paper_detail` 未在这 10 篇上执行 |\n| 已确认缓存摘要的论文 | **0** | 这 10 篇目前均未取摘要 |\n\n`count = 10` 是本请求返回上限对应的条数，**不是** machine learning 在 2023–2026 的文献总量，**也不代表检索覆盖率**。\n\n### 两点如实提示\n\n1. **相关性 ≠ 内容证据**：这 10 篇是按关键词命中的候选，标题都含 machine learning。主题宽泛导致结果跨领域分散（微生物学、生态学综述、纳米光子学、纳米诊疗、蛋白质工程、算法综述、公平性综述）。其中第 7 条从标题看是**期刊条目**性质，而非研究论文。\n2. **无法给出实质性比较**：这 10 篇的摘要一篇都还没取，因此我不能就其方法、数据集、结论、性能说任何有证据的话。表中引用量是工具返回值。\n\n### 若想让结果真正变化，需要改参数或换动作\n\n- **A** 放大返回量：`limit=50`（会 replace，可能带来新条目，仍是同一检索式）\n- **B** 放宽年份：如 2020–2026 或 2015–2026，可纳入更早的高被引基础工作\n- **C** 收窄子方向后重搜：`machine learning review`、`machine learning algorithms`、`machine learning fairness`、`machine learning healthcare`\n- **D** 不再重搜，转入内容层：我按 Work ID 取摘要（建议先取综述类，通用性最强：W3092541244 公平性、W4383560187 算法综述、W4320733708 生态学；或期刊条目 W1809873675 用于确认其性质）\n- **E** 已在候选集内正式排序：`rank_papers(top_k=N)`\n\n**推荐 D**：关键词已定，重复执行只会得到同一批 10 篇；取到摘要后才能谈论方法与结论。请告诉我选哪个，或直接给需要取摘要的 URL / 序号。"
+    },
+    {
+      "role": "user",
+      "content": "请搜索关于机器视觉方向的论文"
+    },
+    {
+      "role": "assistant",
+      "content": "## 检索已完成（主题已切换：machine learning → machine vision）\n\n**本次调用**：`search_papers(keyword=\"machine vision\", start_year=2023, end_year=2026, limit=10)`\n**检索词**：仅取本次主题“机器视觉”对应的英文关键词 `machine vision`，未附加任何限定词\n**返回**：`count = 10`，`update_mode = replace` —— **此前的 10 篇 machine learning 候选已被整体替换**，不在当前候选集中\n\n> 说明：由于本轮主题已变为“机器视觉”，即使它常被视为 machine learning 的应用领域，检索式也必须按本次完整主题生成，因此没有沿用 `machine learning`。\n\n### 当前候选论文（10 篇，工具返回顺序）\n\n| # | 标题 | 年份 | 引用量 | 链接 |\n|---|---|---|---|---|\n| 1 | In-sensor dynamic computing for intelligent machine vision | 2024 | 201 | https://openalex.org/W4391652935 |\n| 2 | Multichannel meta-imagers for accelerating machine vision | 2024 | 119 | https://openalex.org/W4390578902 |\n| 3 | The Photographic Pipeline of Machine Vision; or, Machine Vision's Latent Photographic Theory | 2023 | 12 | https://openalex.org/W4387253498 |\n| 4 | Machine Vision | 2026 | 0 | https://openalex.org/W7125283754 |\n| 5 | Machine Vision | 2024 | 1 | https://openalex.org/W4391485812 |\n| 6 | Machine Vision | 2026 | 0 | https://openalex.org/W7128949802 |\n| 7 | Intelligent fish feeding based on machine vision: A review | 2023 | 95 | https://openalex.org/W4381435570 |\n| 8 | Photoelectric Memristor-Based Machine Vision for Artificial Intelligence Applications | 2023 | 126 | https://openalex.org/W4315926782 |\n| 9 | Machine Vision | 2024 | 0 | https://openalex.org/W4405424063 |\n| 10 | Preprocessing Enhanced Image Compression for Machine Vision | 2024 | 50 | https://openalex.org/W4401452460 |\n\n### 数量区分\n\n| 项目 | 数值 | 说明 |\n|---|---|---|\n| 候选论文数（当前状态） | **10** | 已 replace 为 machine vision 结果 |\n| 本次工具实际返回条数 | **10** | 受 `limit=10` 约束 |\n| 参与语义检索的摘要数 | **0** | 未调用 `retrieve_saved_papers` |\n| 已确认缓存摘要的论文 | **0** | 这 10 篇均未取摘要 |\n\n`count = 10` 是本次返回上限对应的条数，**不是** machine vision 在 2023–2026 的文献总量，也不代表检索覆盖。\n\n### 对这批结果的如实判断\n\n1. **领域分布比上一轮更集中**：明显偏向**硬件/器件与成像光学**路线（第 1、2、8 篇：传感器内动态计算、多通道超构成像器、光电忆阻器）与**应用/工程**路线（第 7 篇鱼类投喂综述、第 10 篇面向机器视觉的图像压缩预处理）。此外第 3 篇属**人文学科/媒介理论**视角，非工程技术。\n2. **有 4 条标题完全为 “Machine Vision”**（第 4、5、6、9 篇），引用量为 0 或 1，标题无区分信息，从形态看更像**期刊、丛书卷或教材条目**而非研究论文。是否如此需取详情核实，我不做断定。\n3. **无内容证据**：这 10 篇摘要一篇都未获取，因此不能就其方法、数据集、结论、性能给出任何证据性陈述。表中引用量为工具返回值。\n\n### 建议下一步\n\n- **A**（推荐）：`get_paper_detail` 取摘要，优先核实四条同名 “Machine Vision” 记录的实际性质，并读取信息量最高的几篇（建议 W4391652935、W4381435570、W4401452460）\n- **B**：`rank_papers(top_k=N)` 在当前 10 篇内按引用量正式排序\n- **C**：收窄子方向重搜（会再次 replace），如 `industrial machine vision inspection`、`machine vision defect detection`、`deep learning machine vision`\n- **D**：放宽年份至 2015–2026 或提高 `limit` 至 50，以获取更完整的候选面\n\n请指定下一步。"
     }
   ]
 }
