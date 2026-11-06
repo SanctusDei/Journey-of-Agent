@@ -868,7 +868,7 @@ class PaperSearchAgent:
         # 恢复执行后仍可能再次中断，因此使用循环处理
         while result.get("__interrupt__"):
             # 显示中断信息，例如需要用户补充的研究主题
-            console.print(result["__interrupt__"])
+            console.print(result["__interrupt__"][0].value)
 
             # 读取用户输入，并去除首尾空白
             reply = input("补充信息: ").strip()

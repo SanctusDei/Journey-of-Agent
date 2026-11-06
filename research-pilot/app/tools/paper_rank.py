@@ -38,7 +38,7 @@ def rank_papers(
     """按照论文引用量从高到低排序"""
 
     if not 1 <= top_k <= 100:
-        raise ValueError("top_k 必须在 1 到 100之间")
+        raise ValueError("top_k 必须在 1 到 100 之间")
 
     return sorted(
         papers,
