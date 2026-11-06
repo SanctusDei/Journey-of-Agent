@@ -84,7 +84,7 @@ class AgentState:
 
         # 每轮两条消息，只保留最近三轮
         self.chat_history = self.chat_history[-6:]
-
+    
     def to_dict(self) -> dict:
 
         """将业务对象转化成为普通字典"""
@@ -110,6 +110,7 @@ class AgentState:
 
     @classmethod
     def from_dict(cls, data: dict) -> "AgentState":
+
         """将普通字典恢复为业务对象"""
         data = deepcopy(data)
         papers = [
@@ -120,7 +121,7 @@ class AgentState:
         return cls(
             papers={paper.url: paper for paper in papers},
             selected_ids = data.get("selected_ids", []),
-            paper_details = data.get("paper_deStails", {}),
+            paper_details = data.get("paper_details", {}),
             last_keyword = data.get("last_keyword", ""),
             plan = data.get("plan", []),
             target_papers = data.get("target_papers", 0),

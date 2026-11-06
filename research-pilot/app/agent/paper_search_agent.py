@@ -677,6 +677,7 @@ class PaperSearchAgent:
 
             # 复制消息历史，追加模型返回的所以输出项
             # 转化为 JSON 兼容的字典，同时省略值为 None 的字段
+
             messages = list(state["messages"])
             messages.extend(
                 item.model_dump(mode="json",exclude_none=True)
@@ -814,27 +815,42 @@ class PaperSearchAgent:
         }
 
     async def _drive_graph(self, graph_input, config: dict) -> str:
-        
+        """执行智能体状态图，处理中断交互，并返回最终结果"""
+
+        # 异步执行状态图，graph_input 可以是初始输入或恢复执行的命令
+        # config 传入线程标识等运行配置
+        # durability="sync" 表示在进入下一步前，同步完成状态持久化
         result = await self.agent_graph.ainvoke(
             graph_input,
             config=config,
             durability="sync",
         )
 
+        # 如果执行过程中触发中断，则向用户获取补充信息
+        # 恢复执行后仍可能再次中断，因此使用循环处理
         while result.get("__interrupt__"):
+            # 显示中断信息，例如需要用户补充的研究主题
             console.print(result["__interrupt__"])
 
+            # 读取用户输入，并去除首尾空白
             reply = input("补充信息: ").strip()
+
+            # 输入为空时继续等待，不恢复状态图执行
             if not reply :
                 continue
 
+            # 将用户回复作为中断恢复值，继续执行状态图
+            # 使用相同的 config, 以关联到原来的执行线程和检查点
             result = await self.agent_graph.ainvoke(
                 Command(resume=reply),
                 config=config,
                 durability="sync",
             )
 
+        # 执行结束后，将图中最新的业务状态还原为业务对象
         self.state = AgentState.from_dict(result["business_state"])
+
+        # 返回状态图生成的最终答案
         return result["answer"]
 
     async def resume(self, thread_id: str = "main") -> str:
