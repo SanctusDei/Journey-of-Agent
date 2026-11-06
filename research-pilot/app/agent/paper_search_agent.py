@@ -175,37 +175,59 @@ class PaperSearchAgent:
         target_papers:int = 0,
         thread_id: str = "main",   
         ) -> str:
+        """ 启动新任务，准备任务计划和模型消息，并通过状态图执行。
+
+        Args:
+            query: 用户的查询或任务描述。
+            target_papers: 目标论文数量, 取值为 0-5: 为 0 时不生成任务计划。
+            thread_id: 执行任务的线程ID, 用于关联检查点。
         
+        Returns:
+            智能体生成的最终回答。
+        """
+
+        # 校验目标论文数量的取值范围
         if not 0 <= target_papers <= 5:
             raise ValueError("target_papers 必须在0到5之间")
 
+        # 构建线程配置，并获取该线程最近保存的状态快照
         config = self._graph_config(thread_id)
         previous = await self.agent_graph.aget_state(config)
-
+    
+        # 如果仍有待执行节点，则要求先恢复已有任务
+        # 避免在同一线程中启动新任务而覆盖未完成的执行状态
         if previous.next:
             raise ValueError("存在未完成任务，请先调用 resume()")
 
+        # 设置本次任务的目标论文数量，并清空上一轮任务计划
         self.state.target_papers = target_papers
         self.state.plan = []
 
+        # 指定目标论文数量时，根据用户查询生成计划
         if target_papers > 0:
             # 生成计划
             self.state.plan = await self.create_plan(query)
+
+            # 清空此前选中的论文 ID, 准备本次任务的论文选择
             self.state.selected_ids = []
 
+            # 按顺序展示本次任务计划
             console.print("[cyan]本次任务计划[/cyan]")
             for i, item in enumerate(self.state.plan, start=1):
                 console.print(f"{i}. {item}") 
 
-        # 将State 摘要加入系统消息
+        # 将当前业务状态的摘要转为 JSON, 作为模型的上下文
+        # ensure_ascii=False 保留中文等非 ASCII 字符，便于阅读
         state_summary = json.dumps(
             self.state.snapshot(),
             ensure_ascii=False,
         )
 
+        # 构建模型输入: 系统指令、历史对话、本次用户调查
         messages = [
             {
                 "role": "system",
+                # 规定工具使用方式、证据要求、数量统计口径和缓存规则
                 "content": (
                     "你是 ResearchPilot 科研助手。"
                     "只能依据工具返回的真实论文信息回答。"
@@ -231,7 +253,9 @@ class PaperSearchAgent:
                     "需要报告缓存覆盖数量时，以工具返回的数据为准。"
                 ),
             },
+            # 展开历史对话，帮助模型理解上下文和指代
             *self.state.chat_history,
+            # 将本次调查追加为最新的用户消息
             {"role": "user", "content": query}
             ]
 
@@ -290,45 +314,54 @@ class PaperSearchAgent:
         # self.state.remember_turn(query, answer)
         # return answer
 
+        # 初始化本次执行的图状态, 交由状态图驱动方法运行
+        # 模型调用、工具执行、中断交互和结果收尾由状态图以及驱动方法负责
         return await self._drive_graph(
             {
-                "query": query,
-                "messages": messages,
-                "tool_calls": [],
-                "answer": "",
-                "steps": 0,
-                "business_state": self.state.to_dict(),
+                "query": query,        # 本次用户查询
+                "messages": messages,  # 系统指令、历史对话和当前查询
+                "tool_calls": [],      # 待执行的工具调用，初始为空
+                "answer": "",          # 最终回答，初始为空
+                "steps": 0,            # 已执行的模型调用轮数，从 0 开始
+                # 将当前业务对象序列化，供图节点读取和更新.
+                "business_state": self.state.to_dict(),  
             },
             config,
         )
         
     async def _execute_tool(self, tool_call) -> dict:
-        """执行工具"""
+        """执行模型请求的工具，并将结果或指定异常封装为工具输出消息。"""
         try:
-
+            # 检查工具是否已经注册，避免调用不存在的工具
             if tool_call.name not in self.tool_registry:
                 raise ValueError(f"未注册的工具: {tool_call.name}")
 
             # json -> python dict
+            # 将模型传入的JSON 参数字符串解析为 Python 对象
             args = json.loads(tool_call.arguments)
 
+            # 参数必须为字典, 才能通过 **args 作为关键词参数传入工具
             if not isinstance(args, dict):
                 raise ValueError("工具参数必须是 JSON 对象")
 
+            # 展示模型选择的工具以及调用参数
             console.print(f"[dim]模型选择工具：{tool_call.name}，参数：{args}[/dim]")
 
-            # 获取Tool方法
+            # 从注册表中获取工具函数
             tool_func = self.tool_registry.get(tool_call.name)
             
-            # 兼容同步和异步工具
+            # 调用工具: 同步函数直接返回结果，异步函数通常返回协程对象
             result = tool_func(**args)
 
+            # 如果返回值可以等待，则等待执行完成，获取实际结果
             if inspect.isawaitable(result):
                 result = await result
 
             # Pydantic 模型与普通dict 统一为 JSON
             # Pydantic & dict -> Json 兼容的 Python dict
 
+            # 如果结果为列表, 将其中具有 model_dump 方法的原生
+            # 按 Pydantic 模型的方式转为 JSON 兼容数据， 其余元素保持原样
             if isinstance(result, list):
                 result = [
                     item.model_dump(mode="json")
@@ -336,15 +369,20 @@ class PaperSearchAgent:
                     else item
                     for item in result
                 ]
-            # 将 result list[dict] -> json str 
+            # 将 result list[dict] -> json str
+            
+            # 将工具结果序列化为 JSON 字符串, 保留中文字符  
             output = json.dumps(result, ensure_ascii=False)
 
         except (json.JSONDecodeError, ValueError, TypeError, KeyError) as exc:
+            # 将上述类型的参数解析、工具执行或序列化异常转为错误信息
+            # 错误信息会作为工具结果返回给模型, 供其后续处理
             output = json.dumps(
                 {"error": str(exc)},
                 ensure_ascii=False
             )
 
+        # 构造工具输出消息, 通过 call_id 关联模型发起的那次工具调用
         return {
             "type": "function_call_output",
             "call_id": tool_call.call_id,
@@ -854,25 +892,33 @@ class PaperSearchAgent:
         return result["answer"]
 
     async def resume(self, thread_id: str = "main") -> str:
+        """根据线程ID 恢复已有任务: 若任务已结束，则返回已保存的回答。"""
+
+        # 根据线程 ID 构建运行配置, 用于定位该线程的检查点
         config = self._graph_config(thread_id)
+        
+        # 异步获取该线程最近一次保存的状态快照 
         previous = await self.agent_graph.aget_state(config)
 
-        # 检查有无历史检查点
+        # 检查是否存在已保存的状态数据
         if not previous.values:
             raise ValueError("当前线程没有可恢复的任务")
 
-        # 判断检查点中是否有论文数据
+        # 检查是否包含恢复任务所需的业务状态
         if "business_state" not in previous.values:
             raise ValueError("旧检查点没有完整论文状态，无法恢复该任务")
 
+        # 从检查点恢复业务对象, 包括已保存的论文数据和任务上下文
         self.state = AgentState.from_dict(
             previous.values["business_state"]
         )
 
-        # 判断任务是否结束
+        # 没有待执行的节点，说明任务已经结束, 直接返回保存的答案
         if not previous.next:
             return previous.values.get("answer", "")
 
+        # 传入None, 基于该线程的检查点继续执行
+        # 若任务停在 interrupt(), 仍需通过 Command(resume=...) 提供恢复值
         return await self._drive_graph(None, config)
     
 if __name__ == "__main__":
