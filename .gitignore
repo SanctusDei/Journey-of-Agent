@@ -65,3 +65,9 @@ Thumbs.db
 *.log
 **/workspace/*
 !**/workspace/.gitkeep
+
+# 排除research-pilot项目下的other和tests文件夹
+/research-pilot/other/
+/research-pilot/tests/
+
+
