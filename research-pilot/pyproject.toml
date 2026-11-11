@@ -28,7 +28,6 @@ dev = [
 [tool.uv]
 package = true
 
-[tool.uv.workspace]
 
 [tool.setuptools.packages.find]
 where = ["."]

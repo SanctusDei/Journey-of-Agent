@@ -3,7 +3,6 @@ import os
 from typing import Any
 from pydantic import BaseModel, Field
 
-
 class Config(BaseModel):
     """HelloAgent配置类"""
 
@@ -43,7 +42,10 @@ class Config(BaseModel):
 
 if __name__ == "__main__":
     """Test Config"""
+    from rich.console import Console
+    console = Console()
+
     config = Config.from_env()
 
-    print(config)
-    print(config.to_dict())
+    console.print(config)
+    console.print(config.to_dict())
