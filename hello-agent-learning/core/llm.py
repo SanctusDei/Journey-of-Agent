@@ -4,6 +4,8 @@ import os
 from typing import Literal, Optional, Iterator
 from openai import OpenAI
 
+from exceptions import HelloAgentsException
+
 
 # 支持的LLM提供商
 SUPPORTED_PROVIDERS = Literal[
@@ -221,7 +223,7 @@ class HelloAgentsLLM:
         if self.provider == "openai":
             return "gpt-3.5-turbo"
         elif self.provider == "deepseek":
-            return "deepseek-chat"
+            return "deepseek-flash"
         elif self.provider == "qwen":
             return "qwen-plus"
         elif self.provider == "modelscope":
@@ -243,7 +245,7 @@ class HelloAgentsLLM:
             if "modelscope" in base_url_lower:
                 return "Qwen/Qwen2.5-72B-Instruct"
             elif "deepseek" in base_url_lower:
-                return "deepseek-chat"
+                return "deepseek-flash"
             elif "dashscope" in base_url_lower:
                 return "qwen-plus"
             elif "moonshot" in base_url_lower:
@@ -273,21 +275,23 @@ class HelloAgentsLLM:
         """
         print(f"🧠 正在调用 {self.model} 模型...")
         try:
-            response = self._client.chat.completions.create(
+            response = self._client.responses.create(
                 model=self.model,
-                messages=messages,
+                input= messages,
                 temperature=temperature if temperature is not None else self.temperature,
-                max_tokens=self.max_tokens,
+                max_output_tokens = self.max_tokens,
                 stream=True,
             )
 
             # 处理流式响应
             print("✅ 大语言模型响应成功:")
-            for chunk in response:
-                content = chunk.choices[0].delta.content or ""
-                if content:
-                    print(content, end="", flush=True)
-                    yield content
+            for event in response:
+                if event.type == "response.output_text.delta":
+                    content = event.delta
+                    
+                    if content:
+                        print(content, end="", flush=True)
+                        yield content
             print()  # 在流式输出结束后换行
 
         except Exception as e:
@@ -299,15 +303,24 @@ class HelloAgentsLLM:
         非流式调用LLM，返回完整响应。
         适用于不需要流式输出的场景。
         """
+        temperature = kwargs.pop(
+            "temperature", self.temperature
+        )
+        
+        max_tokens = kwargs.pop(
+            "max_tokens", self.max_tokens
+        )
+        
         try:
-            response = self._client.chat.completions.create(
+            response = self._client.responses.create(
                 model=self.model,
-                messages=messages,
-                temperature=kwargs.get('temperature', self.temperature),
-                max_tokens=kwargs.get('max_tokens', self.max_tokens),
-                **{k: v for k, v in kwargs.items() if k not in ['temperature', 'max_tokens']}
+                input=messages,
+                temperature=temperature,
+                max_output_tokens=self.max_tokens,
+                stream=False,
+                **kwargs
             )
-            return response.choices[0].message.content
+            return response.output_text 
         except Exception as e:
             raise HelloAgentsException(f"LLM调用失败: {str(e)}")
 
@@ -318,3 +331,46 @@ class HelloAgentsLLM:
         """
         temperature = kwargs.get('temperature')
         yield from self.think(messages, temperature)
+
+
+if __name__ == "__main__":
+    from dotenv import load_dotenv
+
+    # 加载项目根目录的 .env
+    load_dotenv()
+
+    # 初始化 LLM
+    llm = HelloAgentsLLM(
+        provider="deepseek",
+        model=os.getenv("LLM_MODEL_ID") or "deepseek-flash",
+        temperature=0.7,
+        max_tokens=256,
+    )
+
+    messages = [
+        {"role": "system", "content": "你是一名 Python 编程助手。"},
+        {"role": "user", "content": "用一句话解释 Python 的 yield。"},
+    ]
+
+    print(f"Provider: {llm.provider}")
+    print(f"Model: {llm.model}")
+
+    # 测试 1：非流式调用
+    print("\n========== invoke() 测试 ==========")
+
+    answer = llm.invoke(messages)
+    print("完整响应：", answer)
+
+    # 测试 2：流式调用
+    print("\n========== think() 测试 ==========")
+
+    chunks = []
+
+    for chunk in llm.think(messages):
+        chunks.append(chunk)
+
+    print(f"收到 {len(chunks)} 个文本片段")
+    print(f"拼接后的文本长度：{len(''.join(chunks))}")
+
+    print("\n========== 测试结束 ==========")
+

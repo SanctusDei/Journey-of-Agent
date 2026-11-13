@@ -1,5 +1,5 @@
 from core import Agent, Message, Config
-from hello_agents import HelloAgentsLLM
+from hello_agents import HelloAgentsLLM, SimpleAgent
 from typing import Optional, Any
 
 
