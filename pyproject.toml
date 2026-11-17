@@ -11,4 +11,8 @@ dependencies = [
     "socksio>=1.0.0",
 ]
 
+[tool.uv.workspace]
+members = [
+]
+
 
