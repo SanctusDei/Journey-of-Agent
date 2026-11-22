@@ -3,6 +3,9 @@ name = "mini-agent-learning"
 version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
+    "httpx[socks]>=0.28.1",
+    "ipykernel>=7.4.0",
+    "openai>=3.52.0",
     "pydantic>=2.14.3",
     "python-dotenv>=1.2.4",
     "rich>=15.0.0",
