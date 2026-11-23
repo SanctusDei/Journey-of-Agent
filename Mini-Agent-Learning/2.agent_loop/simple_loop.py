@@ -74,24 +74,33 @@ while True:
         tool_calls = []
         console.print("="* 10 + f" 第{step + 1}轮 " + "=" * 10)
         if is_stream:
-            full_text = ""
             response = OpenAIClient.responses.create(
                 model= model,
+                tools = TOOLS_SCHEMA,
                 input= history,
                 temperature=0.7,
                 stream= True
             )
-            for event in response:
 
-                # console.print(event)
+            for event in response:
+                console.print(event)
                 if event.type == "response.output_text.delta":
                     print(event.delta, end="", flush=True)
-                    full_text += event.delta
-
+                elif event.type == "response.completed":
+                    if event.response.output:
+                        history.append({"role": "assistant", "content": event.response.output_text})
+                    for item in event.response.output:
+                        if item.type == "function_call":
+                            tool_calls.append(item)
+                            history.append({
+                                "type": "function_call",
+                                "call_id": item.call_id,
+                                "name": item.name,
+                                "arguments": item.arguments
+                            })
             print()
-            
-            history.append({"role": "assistant", "content": full_text})
         else:
+
             response = OpenAIClient.responses.create(
                 model = model,
                 instructions=prompt,
@@ -100,12 +109,23 @@ while True:
                 temperature=0.7
             )
 
-            history.extend(response.output)
-
+            # console.print(response) 
+            
             if response.output_text:
-                console.print(Markdown(response.output_text))
 
-            tool_calls = [item for item in response.output if item.type == "function_call"]
+                console.print(Markdown(response.output_text))
+                history.append({"role": "assistant", "content": response.output_text})
+
+            for item in response.output:
+                if item.type == "function_call":
+                    tool_calls.append(item)
+                    history.append({
+                        "type": "function_call",
+                        "call_id": item.call_id,
+                        "name": item.name,
+                        "arguments": item.arguments
+                    })
+
             
         # 没有工具调用，说明已经给出最终回复， 跳出内层循环等待下一句指令        
         if not tool_calls:
@@ -119,7 +139,7 @@ while True:
             # 2. 提取 ToolResult 里的实际内容和错误信息
             output_str = tool_res.content if tool_res.success else f"Error: {tool_res.error}"
             console.print(f"[cyan]工具调用：{tc.name}({args}) -> {output_str}[/cyan]")
-
+            # 将返回结果加入历史聊天记录
             history.append({
                 "type": "function_call_output",
                 "call_id": tc.call_id,
@@ -127,6 +147,6 @@ while True:
             })
 
         step += 1
-    console.print(history)
+    # console.print(history)
 
     
